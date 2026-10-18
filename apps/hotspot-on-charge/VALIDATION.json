@@ -1,0 +1,28 @@
+{
+  "version": "0.3-simple",
+  "apk_sha256": "3dcb8ddc5a11af96b594c5d7a6f34c697b613293454decf71d3a0123207483ba",
+  "package": "org.nextgendrive.hotspot",
+  "min_android_api": 26,
+  "build_api": 29,
+  "target_api": 28,
+  "tested_device": "Huawei P30 Pro Android10 EMUI12",
+  "update_preserves_signature_and_data": "HARDWARE_CONFIRMED",
+  "legacy_journal_recovery_and_hotspot_on": "HARDWARE_CONFIRMED",
+  "foreground_service_running": "HARDWARE_CONFIRMED",
+  "charging_event_hotspot_on_v1": "HARDWARE_CONFIRMED",
+  "physical_charger_cycle_v2": "PENDING",
+  "cold_boot_and_first_unlock_v2": "PENDING",
+  "other_android_devices": "NOT_VERIFIED",
+  "extended_sleep": "NOT_VERIFIED",
+  "boot_recovery_policy_tests": "PASS",
+  "signature_schemes_verified": [
+    "v2",
+    "v3"
+  ],
+  "universal_automatic_tethering_claimed": false,
+  "private_keys_included": false,
+  "oem_libraries_included": false,
+  "simple_ui": "HARDWARE_SCREENSHOT_VERIFIED",
+  "automation_armed_and_hotspot_on_after_ui_update": "HARDWARE_CONFIRMED",
+  "service_and_boot_receiver_unchanged_from": "0.2-bootfix"
+}

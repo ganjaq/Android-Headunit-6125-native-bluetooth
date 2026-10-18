@@ -1,0 +1,13 @@
+release/
+dist/
+.local/
+__pycache__/
+*.pyc
+*.pk8
+*.keystore
+*.jks
+*.snapshot
+*.receipt
+*.btsnoop
+.idea/
+.vscode/

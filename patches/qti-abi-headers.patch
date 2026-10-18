@@ -1,0 +1,48 @@
+--- a/system/bt/include/hardware/ble_scanner.h
++++ b/system/bt/include/hardware/ble_scanner.h
+@@ -96,8 +96,8 @@
+   virtual void ScanFilterEnable(bool enable, EnableCallback cb) = 0;
+ 
+   /** Sets the LE scan interval and window in units of N*0.625 msec */
+-  virtual void SetScanParameters(int scan_interval, int scan_window,
+-                                 Callback cb) = 0;
++  virtual void SetScanParameters(int scan_phy, std::vector<uint32_t> scan_interval,
++                                 std::vector<uint32_t> scan_window, Callback cb) = 0;
+ 
+   /* Configure the batchscan storage */
+   virtual void BatchscanConfigStorage(int client_if, int batch_scan_full_max,
+--- a/system/bt/include/hardware/bt_av.h
++++ b/system/bt/include/hardware/bt_av.h
+@@ -53,7 +53,9 @@
+   BTAV_A2DP_CODEC_INDEX_SOURCE_AAC,
+   BTAV_A2DP_CODEC_INDEX_SOURCE_APTX,
+   BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_HD,
++  BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_ADAPTIVE,
+   BTAV_A2DP_CODEC_INDEX_SOURCE_LDAC,
++  BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_TWS,
+ 
+   BTAV_A2DP_CODEC_INDEX_SOURCE_MAX,
+ 
+@@ -149,6 +151,12 @@
+       case BTAV_A2DP_CODEC_INDEX_SOURCE_LDAC:
+         codec_name_str = "LDAC";
+         break;
++      case BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_ADAPTIVE:
++        codec_name_str = "aptX Adaptive";
++        break;
++      case BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_TWS:
++        codec_name_str = "aptX TWS";
++        break;
+       case BTAV_A2DP_CODEC_INDEX_SINK_SBC:
+         codec_name_str = "SBC (Sink)";
+         break;
+@@ -305,7 +313,8 @@
+    */
+   bt_status_t (*init)(btav_source_callbacks_t* callbacks,
+                       int max_connected_audio_devices,
+-                      std::vector<btav_a2dp_codec_config_t> codec_priorities);
++                      std::vector<btav_a2dp_codec_config_t> codec_priorities,
++                      std::vector<btav_a2dp_codec_config_t> offload_enabled_codecs);
+ 
+   /** connect to headset */
+   bt_status_t (*connect)(const RawAddress& bd_addr);

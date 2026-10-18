@@ -1,0 +1,6 @@
+NEXTGENDRIVE Native Bluetooth
+Project additions: NEXTGENDRIVE contributors, 2026. Apache License 2.0.
+Contains source derived from the Android Open Source Project; retain individual copyright headers and licenses/AOSP-NOTICE.txt.
+The source license does not claim ownership of OEM runtime libraries, Settings APK, Audi/Qualcomm/Microsoft trademarks or private per-device data. Local generated binary payload is excluded from Git.
+
+The charging-to-hotspot companion is project source under Apache-2.0. The included APK is built from project code and contains no OEM runtime libraries. User-provided photographs in docs/images are illustrative assets, separate from the source-code licence.

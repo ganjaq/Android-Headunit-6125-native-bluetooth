@@ -1,0 +1,20 @@
+{
+  "original_sha256": "46ea77f8832d248d9c0ed695016d2ecd56caf994fd31946f845d3cc94aec95e6",
+  "candidate_sha256": "fed58fe187827f26ee54b618f5f0dbc88f28d5cfc1fa1986bf07208a3569b927",
+  "certificate_sha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+  "method": [
+    "Lcom/android/settings/bluetooth/Utils;",
+    "isBluetoothSupported",
+    "(Landroid/content/Context;)Z"
+  ],
+  "code_offset": 2649532,
+  "instruction": "const/4 v0, 0 -> const/4 v0, 1; return v0",
+  "semantic_change_bytes": [
+    2649549
+  ],
+  "dex_header_sha1_adler32_recomputed": true,
+  "manifest_resources_assets_unchanged": true,
+  "original_preserved": true,
+  "installed": false,
+  "scope": "Visibility only for verified Bluetooth-capable target; no QTI/HCI enabling; no permissions changed"
+}

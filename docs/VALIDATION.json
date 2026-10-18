@@ -1,0 +1,27 @@
+{
+  "distribution": "0.1.0-rc1",
+  "radio_actions_during_packaging": "NONE: no ADB commands executed for repository/package preparation",
+  "installer_python_guard_tests": 30,
+  "native_offline_tests": [
+    "transaction_failure_injection_PASS",
+    "snapshot_metadata_roundtrip_and_symlink_rejection_PASS",
+    "host_heartbeat_parser_PASS"
+  ],
+  "hardware_tested_payload": "Exact ETAP17 APK/JNI/controller previously tested on one unit",
+  "new_combined_installer_hardware_test": "NOT RUN; no reinstall of working radio",
+  "owner_latest_confirmation": "Ignition-cycle Xbox immediate; Audi ~30sec automatic; audible sound. Cold boot/resume classification not inspected.",
+  "payload_license_scope": "OEM-derived local binaries excluded from Git; no private signing keys or user backups included",
+  "validation_date": "2026-10-18",
+  "source_state": "Unreleased hardware-twin workflow; original 0.1.0-rc1 payload preserved",
+  "twin_workflow": {
+    "prepare": "PASS",
+    "native_arm64_controller_build": "PASS",
+    "native_arm64_init_installer_build": "PASS",
+    "seal_and_profile_binding": "PASS",
+    "local_archive_integrity": "PASS",
+    "test_target": "SYNTHETIC FIXTURE ONLY",
+    "second_unit_hardware_test": "NOT RUN"
+  },
+  "radio_actions_during_this_update": "NONE; no ADB or radio commands used",
+  "published_oem_binaries": false
+}

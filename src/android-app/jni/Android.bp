@@ -1,0 +1,134 @@
+cc_library_shared {
+    name: "libbluetooth_jni_ngd",
+    compile_multilib: "64",
+    srcs: [
+        "ngd_abi_layout_checks.cpp",
+        "ngd_hci_probe.cpp",
+        "ngd_native_session_client.cpp",
+        "bluetooth_socket_manager.cc",
+        "com_android_bluetooth_btservice_AdapterService.cpp",
+        "com_android_bluetooth_hfp.cpp",
+        "com_android_bluetooth_hfpclient.cpp",
+        "com_android_bluetooth_a2dp.cpp",
+        "com_android_bluetooth_a2dp_sink.cpp",
+        "com_android_bluetooth_avrcp_controller.cpp",
+        "com_android_bluetooth_avrcp_target.cpp",
+        "com_android_bluetooth_hid_host.cpp",
+        "com_android_bluetooth_hid_device.cpp",
+        "com_android_bluetooth_hearing_aid.cpp",
+        "com_android_bluetooth_pan.cpp",
+        "com_android_bluetooth_gatt.cpp",
+        "com_android_bluetooth_sdp.cpp",
+        "IUserManager.cc",
+        "permission_helpers.cc",
+    ],
+    header_libs: ["libbluetooth_headers"],
+    include_dirs: [
+        "libnativehelper/include/nativehelper",
+        "system/core/libnativeloader/include",
+        "system/bt/types",
+    ],
+    shared_libs: [
+        "libandroid_runtime",
+        "android.hardware.bluetooth@1.0",
+        "libhidlbase",
+        "libhidltransport",
+        "libcrypto",
+        "libbinder",
+        "libbluetooth-binder",
+        "libchrome",
+        "libnativehelper",
+        "liblog",
+        "libutils",
+    ],
+    static_libs: [
+        "libbluetooth-types",
+        "libcutils",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wextra",
+        "-Wno-unused-parameter",
+    ],
+    sanitize: {
+        scs: true,
+    },
+}
+
+
+// Standalone read-only ownership probe. It never links or dlopens the QTI stack.
+cc_binary {
+    name: "ngd_hci_probe",
+    srcs: ["ngd_hci_probe.cpp", "ngd_hci_probe_main.cpp"],
+    compile_multilib: "64",
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}
+
+cc_binary {
+    name: "ngd_blink_hold12",
+    srcs: ["ngd_blink_hold.c"],
+    compile_multilib: "64",
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+    stl: "none",
+}
+cc_binary {
+    name: "ngd16_native_bt",
+    srcs: ["ngd_native_session_main.cpp", "ngd_native_transaction.cpp", "ngd_btdata_snapshot.cpp", "ngd_native_session_client.cpp", "ngd_hci_probe.cpp"],
+    compile_multilib: "64",
+    shared_libs: ["android.hardware.bluetooth@1.0", "libhidlbase", "libhidltransport", "libutils", "libcrypto"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}
+
+cc_prebuilt_library_shared {
+ relative_install_path: "ngd13b_runtime",
+ name: "libngd_runtime_bluetooth_binder",
+ stem: "libbluetooth-binder",
+ srcs: ["ngd_runtime_oem/libbluetooth-binder.so"],
+ compile_multilib: "64",
+ strip: { none: true },
+ check_elf_files: false,
+ stl: "none",
+}
+
+cc_prebuilt_library_shared {
+ relative_install_path: "ngd13b_runtime",
+ name: "libngd_runtime_chrome",
+ stem: "libchrome",
+ srcs: ["ngd_runtime_oem/libchrome.so"],
+ compile_multilib: "64",
+ strip: { none: true },
+ check_elf_files: false,
+ stl: "none",
+}
+
+cc_prebuilt_library_shared {
+ relative_install_path: "ngd13b_runtime",
+ name: "libngd_runtime_nativehelper",
+ stem: "libnativehelper",
+ srcs: ["ngd_runtime_oem/libnativehelper.so"],
+ compile_multilib: "64",
+ strip: { none: true },
+ check_elf_files: false,
+ stl: "none",
+}
+
+cc_prebuilt_library_shared {
+ relative_install_path: "ngd13b_runtime",
+ name: "libngd_runtime_event",
+ stem: "libevent",
+ srcs: ["ngd_runtime_oem/libevent.so"],
+ compile_multilib: "64",
+ strip: { none: true },
+ check_elf_files: false,
+ stl: "none",
+}
+
+
+
+cc_binary {
+    name: "ngd16_init_installer",
+    srcs: ["ngd16_init_installer.cpp"],
+    compile_multilib: "64",
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}

@@ -1,0 +1,33 @@
+# Candidate only. Not installed. Target: the verified BLINK_6125 Android 10 build.
+# Root init.rc loads persistent properties in its earlier action for this event.
+# exec_start completes before the queued zygote-start and boot/class_start actions.
+on load_persist_props_action
+    exec_start ngd-bt-prepare
+
+# Keep OEM Bluetooth stopped even if the native payload fails validation.
+# This is intentionally disruptive to the whole BLINK service. Installation
+# requires explicit approval; MCU is a separate Android application.
+on boot
+    stop blink
+
+on property:init.svc.blink=running
+    stop blink
+
+service ngd-bt-prepare /data/local/ngd-native-bt/ngd16_native_bt --boot-prepare
+    user root
+    group root
+    seclabel u:r:su:s0
+    disabled
+    oneshot
+    timeout_period 20
+
+on property:sys.boot_completed=1 && property:ngd.native.boot_ready=1
+    start ngd-native-bt
+
+service ngd-native-bt /data/local/ngd-native-bt/ngd16_native_bt --persistent
+    user root
+    group root
+    seclabel u:r:su:s0
+    disabled
+    oneshot
+    # No restart loop, no laptop heartbeat, no session time limit.

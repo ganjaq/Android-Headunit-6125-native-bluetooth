@@ -1,0 +1,21 @@
+Offline validation — 2026-10-18
+
+Python command:
+  python -B -m unittest discover -s tests -v
+Result: 30 tests PASS, 0 failures.
+Includes default-profile regression, read-only twin assessment, component differences,
+unknown controller refusal, per-target source generation, no overwrite, old-binary
+rejection, unchanged safety constraints and target-profile binding.
+
+Linux command:
+  python3 tools/run_native_tests.py
+Result: transaction failure injection PASS; snapshot roundtrip/symlink rejection PASS;
+heartbeat parser PASS. Existing misleading-indentation compiler warnings remain.
+
+ARM64 build validation:
+Controller and init installer compiled in existing Android10 AOSP toolchain for a
+synthetic different-fingerprint target. Final prepare/seal and local ZIP integrity PASS.
+This is build/tooling validation, NOT hardware validation on a second head unit.
+
+No device access or radio changes during this update. No private data or OEM binaries
+are included in the Git changes. See VALIDATION.json and BLIZNIACZE_JEDNOSTKI.md.

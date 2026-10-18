@@ -1,0 +1,1595 @@
+--- a/Android.mk
++++ b/Android.mk
+@@ -18,6 +18,7 @@
+ LOCAL_PRIVATE_PLATFORM_APIS := true
+ LOCAL_CERTIFICATE := platform
+ LOCAL_USE_AAPT2 := true
++LOCAL_AAPT_FLAGS += --custom-package com.android.bluetooth
+ LOCAL_JNI_SHARED_LIBRARIES := libbluetooth_jni_ngd libngd_runtime_bluetooth_binder libngd_runtime_chrome libngd_runtime_nativehelper libngd_runtime_event
+ LOCAL_JAVA_LIBRARIES := javax.obex telephony-common services.net
+ LOCAL_STATIC_JAVA_LIBRARIES := \
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -1,24 +1,17 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-  package="com.android.bluetooth"
++  package="org.codeaurora.bluetooth"
++  android:versionCode="140014"
++  android:versionName="14.0-test"
+   android:sharedUserId="android.uid.bluetooth">
+ 
+-    <original-package android:name="com.android.bluetooth" />
++    <original-package android:name="org.codeaurora.bluetooth" />
+ 
+     <!-- Allows access to the Bluetooth Share Manager -->
+-    <permission android:name="android.permission.ACCESS_BLUETOOTH_SHARE"
+-        android:label="@string/permlab_bluetoothShareManager"
+-        android:description="@string/permdesc_bluetoothShareManager"
+-        android:protectionLevel="signature|development" />
+ 
+     <!--  Allows temporarily whitelisting Bluetooth addresses for sharing -->
+-    <permission android:name="com.android.permission.WHITELIST_BLUETOOTH_DEVICE"
+-        android:label="@string/permlab_bluetoothWhitelist"
+-        android:description="@string/permdesc_bluetoothWhitelist"
+-        android:protectionLevel="signature" />
+ 
+     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+-    <uses-permission android:name="android.permission.ACCESS_BLUETOOTH_SHARE" />
+     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+     <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.BLUETOOTH" />
+@@ -75,7 +68,7 @@
+     <uses-permission android:name="android.permission.READ_PROFILE"/>
+     <application
+         android:process="com.android.bluetooth.ngd"
+-        android:name=".btservice.AdapterApp"
++        android:name="com.android.bluetooth.btservice.AdapterApp"
+         android:icon="@mipmap/bt_share"
+         android:persistent="false"
+         android:label="@string/app_name"
+@@ -85,47 +78,47 @@
+         android:defaultToDeviceProtectedStorage="true"
+         android:requestLegacyExternalStorage="true">
+         <uses-library android:name="javax.obex" />
+-        <provider android:name=".opp.BluetoothOppProvider"
++        <provider android:name="com.android.bluetooth.opp.BluetoothOppProvider"
+             android:authorities="com.android.bluetooth.opp"
+             android:exported="true"
+-            android:process="com.android.bluetooth.ngd">
++            android:process="com.android.bluetooth.ngd" android:enabled="false">
+             <path-permission
+                     android:pathPrefix="/btopp"
+                     android:permission="android.permission.ACCESS_BLUETOOTH_SHARE" />
+         </provider>
+-        <provider android:name=".opp.BluetoothOppFileProvider"
++        <provider android:name="com.android.bluetooth.opp.BluetoothOppFileProvider"
+             android:authorities="com.android.bluetooth.opp.fileprovider"
+             android:grantUriPermissions="true"
+-            android:exported="false">
++            android:exported="false" android:enabled="false">
+             <meta-data
+                 android:name="android.support.FILE_PROVIDER_PATHS"
+                 android:resource="@xml/file_paths" />
+         </provider>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".btservice.AdapterService">
++            android:name = "com.android.bluetooth.btservice.AdapterService">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetooth" />
+             </intent-filter>
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".opp.BluetoothOppService"
++            android:name="com.android.bluetooth.opp.BluetoothOppService"
+             android:permission="android.permission.ACCESS_BLUETOOTH_SHARE"
+-            android:enabled="@bool/profile_supported_opp"/>
++            android:enabled="false"/>
+         <receiver
+             android:process="com.android.bluetooth.ngd"
+             android:exported="true"
+-            android:name=".opp.BluetoothOppReceiver"
+-            android:enabled="@bool/profile_supported_opp">
++            android:name="com.android.bluetooth.opp.BluetoothOppReceiver"
++            android:enabled="false">
+             <intent-filter>
+                 <action android:name="android.btopp.intent.action.OPEN_RECEIVED_FILES" />
+             </intent-filter>
+         </receiver>
+          <receiver
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".opp.BluetoothOppHandoverReceiver"
+-            android:permission="com.android.permission.WHITELIST_BLUETOOTH_DEVICE">
++            android:name="com.android.bluetooth.opp.BluetoothOppHandoverReceiver"
++            android:permission="com.android.permission.WHITELIST_BLUETOOTH_DEVICE" android:enabled="false">
+             <intent-filter>
+                 <action android:name="android.btopp.intent.action.WHITELIST_DEVICE" />
+                 <action android:name="android.btopp.intent.action.STOP_HANDOVER_TRANSFER" />
+@@ -141,11 +134,11 @@
+                 <data android:mimeType="*/*" />
+             </intent-filter>
+         </receiver>
+-        <activity android:name=".opp.BluetoothOppLauncherActivity"
++        <activity android:name="com.android.bluetooth.opp.BluetoothOppLauncherActivity"
+             android:process="com.android.bluetooth.ngd"
+             android:theme="@android:style/Theme.Material.Light.Dialog"
+             android:label="@string/bt_share_picker_label"
+-            android:enabled="@bool/profile_supported_opp">
++            android:enabled="false">
+             <intent-filter>
+                 <action android:name="android.intent.action.SEND" />
+                 <category android:name="android.intent.category.DEFAULT" />
+@@ -182,48 +175,48 @@
+                 <data android:mimeType="vnd.android.cursor.item/vnd.android.btopp" />
+             </intent-filter>
+         </activity>
+-        <activity android:name=".opp.BluetoothOppBtEnableActivity"
++        <activity android:name="com.android.bluetooth.opp.BluetoothOppBtEnableActivity"
+                   android:process="com.android.bluetooth.ngd"
+                   android:excludeFromRecents="true"
+                   android:theme="@android:style/Theme.Material.Light.Dialog.Alert"
+-                  android:enabled="@bool/profile_supported_opp">
+-        </activity>
+-        <activity android:name=".opp.BluetoothOppBtErrorActivity"
+-                  android:process="com.android.bluetooth.ngd"
+-                  android:excludeFromRecents="true"
+-                  android:theme="@android:style/Theme.Material.Light.Dialog.Alert">
+-        </activity>
+-        <activity android:name=".opp.BluetoothOppBtEnablingActivity"
++                  android:enabled="false">
++        </activity>
++        <activity android:name="com.android.bluetooth.opp.BluetoothOppBtErrorActivity"
++                  android:process="com.android.bluetooth.ngd"
++                  android:excludeFromRecents="true"
++                  android:theme="@android:style/Theme.Material.Light.Dialog.Alert" android:enabled="false">
++        </activity>
++        <activity android:name="com.android.bluetooth.opp.BluetoothOppBtEnablingActivity"
+                   android:process="com.android.bluetooth.ngd"
+                   android:excludeFromRecents="true"
+                   android:theme="@android:style/Theme.Material.Light.Dialog.Alert"
+-                  android:enabled="@bool/profile_supported_opp">
+-        </activity>
+-        <activity android:name=".opp.BluetoothOppIncomingFileConfirmActivity"
++                  android:enabled="false">
++        </activity>
++        <activity android:name="com.android.bluetooth.opp.BluetoothOppIncomingFileConfirmActivity"
+                   android:process="com.android.bluetooth.ngd"
+                   android:excludeFromRecents="true"
+                   android:theme="@android:style/Theme.Material.Light.Dialog.Alert"
+-                  android:enabled="@bool/profile_supported_opp">
+-        </activity>
+-        <activity android:name=".opp.BluetoothOppTransferActivity"
++                  android:enabled="false">
++        </activity>
++        <activity android:name="com.android.bluetooth.opp.BluetoothOppTransferActivity"
+                   android:process="com.android.bluetooth.ngd"
+                   android:excludeFromRecents="true"
+                   android:theme="@android:style/Theme.Material.Light.Dialog.Alert"
+-                  android:enabled="@bool/profile_supported_opp">
+-        </activity>
+-        <activity android:name=".opp.BluetoothOppTransferHistory"
++                  android:enabled="false">
++        </activity>
++        <activity android:name="com.android.bluetooth.opp.BluetoothOppTransferHistory"
+                   android:process="com.android.bluetooth.ngd"
+                   android:label=""
+                   android:excludeFromRecents="true"
+                   android:configChanges="orientation|keyboardHidden"
+-                  android:enabled="@bool/profile_supported_opp"
++                  android:enabled="false"
+                   android:theme="@android:style/Theme.DeviceDefault.Settings">
+             <intent-filter>
+                 <action android:name="com.android.bluetooth.action.TransferHistory" />
+                 <category android:name="android.intent.category.DEFAULT" />
+             </intent-filter>
+         </activity>
+-        <activity android:name=".pbap.BluetoothPbapActivity"
++        <activity android:name="com.android.bluetooth.pbap.BluetoothPbapActivity"
+             android:process="com.android.bluetooth.ngd"
+             android:excludeFromRecents="true"
+             android:theme="@android:style/Theme.Material.Light.Dialog.Alert"
+@@ -234,7 +227,7 @@
+         </activity>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".pbap.BluetoothPbapService"
++            android:name="com.android.bluetooth.pbap.BluetoothPbapService"
+             android:enabled="@bool/profile_supported_pbap" >
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothPbap" />
+@@ -242,7 +235,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".map.BluetoothMapService"
++            android:name="com.android.bluetooth.map.BluetoothMapService"
+             android:enabled="@bool/profile_supported_map" >
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothMap" />
+@@ -250,14 +243,14 @@
+                 <action android:name="com.android.bluetooth.map.USER_CONFIRM_TIMEOUT"/>
+             </intent-filter>
+         </service>
+-         <activity android:name=".map.BluetoothMapSettings"
++         <activity android:name="com.android.bluetooth.map.BluetoothMapSettings"
+                   android:process="com.android.bluetooth.ngd"
+                   android:label="@string/bluetooth_map_settings_title"
+                   android:excludeFromRecents="true"
+                   android:configChanges="orientation|keyboardHidden"
+                   android:enabled="@bool/profile_supported_map">
+         </activity>
+-        <provider android:name=".map.MmsFileProvider"
++        <provider android:name="com.android.bluetooth.map.MmsFileProvider"
+                   android:authorities="com.android.bluetooth.map.MmsFileProvider"
+                   android:enabled="true"
+                   android:grantUriPermissions="true"
+@@ -265,7 +258,7 @@
+         </provider>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".mapclient.MapClientService"
++            android:name="com.android.bluetooth.mapclient.MapClientService"
+             android:enabled="@bool/profile_supported_mapmce" >
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothMapClient" />
+@@ -273,7 +266,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".sap.SapService"
++            android:name="com.android.bluetooth.sap.SapService"
+             android:enabled="@bool/profile_supported_sap" >
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothSap" />
+@@ -281,7 +274,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".gatt.GattService"
++            android:name = "com.android.bluetooth.gatt.GattService"
+             android:enabled="@bool/profile_supported_gatt">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothGatt" />
+@@ -289,7 +282,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".hfp.HeadsetService"
++            android:name = "com.android.bluetooth.hfp.HeadsetService"
+             android:enabled="@bool/profile_supported_hs_hfp">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothHeadset" />
+@@ -297,7 +290,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".a2dp.A2dpService"
++            android:name = "com.android.bluetooth.a2dp.A2dpService"
+             android:enabled="@bool/profile_supported_a2dp">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothA2dp" />
+@@ -305,7 +298,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".a2dpsink.A2dpSinkService"
++            android:name = "com.android.bluetooth.a2dpsink.A2dpSinkService"
+             android:enabled="@bool/profile_supported_a2dp_sink">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothA2dpSink" />
+@@ -313,7 +306,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".avrcpcontroller.BluetoothMediaBrowserService"
++            android:name="com.android.bluetooth.avrcpcontroller.BluetoothMediaBrowserService"
+             android:exported="true"
+             android:enabled="@bool/profile_supported_a2dp_sink"
+             android:label="@string/a2dp_sink_mbs_label">
+@@ -323,7 +316,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".avrcp.AvrcpTargetService"
++            android:name = "com.android.bluetooth.avrcp.AvrcpTargetService"
+             android:enabled = "@bool/profile_supported_avrcp_target" >
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothAvrcp" />
+@@ -331,7 +324,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".avrcpcontroller.AvrcpControllerService"
++            android:name = "com.android.bluetooth.avrcpcontroller.AvrcpControllerService"
+             android:enabled="@bool/profile_supported_avrcp_controller">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothAvrcpController" />
+@@ -339,7 +332,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".hid.HidHostService"
++            android:name = "com.android.bluetooth.hid.HidHostService"
+             android:enabled="@bool/profile_supported_hid_host">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothHidHost" />
+@@ -347,7 +340,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".hid.HidDeviceService"
++            android:name = "com.android.bluetooth.hid.HidDeviceService"
+             android:enabled="@bool/profile_supported_hid_device">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothHidDevice" />
+@@ -355,7 +348,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".pan.PanService"
++            android:name = "com.android.bluetooth.pan.PanService"
+             android:enabled="@bool/profile_supported_pan">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothPan" />
+@@ -363,7 +356,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".hfpclient.HeadsetClientService"
++            android:name = "com.android.bluetooth.hfpclient.HeadsetClientService"
+             android:enabled="@bool/profile_supported_hfpclient">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothHeadsetClient" />
+@@ -371,7 +364,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".hfpclient.connserv.HfpClientConnectionService"
++            android:name="com.android.bluetooth.hfpclient.connserv.HfpClientConnectionService"
+             android:permission="android.permission.BIND_CONNECTION_SERVICE"
+             android:enabled="@bool/hfp_client_connection_service_enabled">
+             <intent-filter>
+@@ -381,7 +374,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".pbapclient.PbapClientService"
++            android:name = "com.android.bluetooth.pbapclient.PbapClientService"
+             android:enabled="@bool/profile_supported_pbapclient">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothPbapClient" />
+@@ -389,7 +382,7 @@
+         </service>
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name = ".hearingaid.HearingAidService">
++            android:name = "com.android.bluetooth.hearingaid.HearingAidService">
+             <intent-filter>
+                 <action android:name="android.bluetooth.IBluetoothHearingAid" />
+             </intent-filter>
+@@ -397,7 +390,7 @@
+         <!-- Authenticator for PBAP account. -->
+         <service
+             android:process="com.android.bluetooth.ngd"
+-            android:name=".pbapclient.AuthenticationService"
++            android:name="com.android.bluetooth.pbapclient.AuthenticationService"
+             android:exported="true"
+             android:enabled="@bool/profile_supported_pbapclient">
+             <intent-filter>
+--- a/jni/Android.bp
++++ b/jni/Android.bp
+@@ -25,6 +25,7 @@
+     header_libs: ["libbluetooth_headers"],
+     include_dirs: [
+         "libnativehelper/include/nativehelper",
++        "system/core/libnativeloader/include",
+         "system/bt/types",
+     ],
+     shared_libs: [
+@@ -118,3 +119,12 @@
+  check_elf_files: false,
+  stl: "none",
+ }
++
++// ETAP14 controller; default closed, USB/host leases and factory-update rollback.
++cc_binary {
++ name: "ngd14_native_session",
++ srcs: ["ngd14_session/ngd_native_session_main.cpp", "ngd14_session/ngd_native_transaction.cpp", "ngd14_session/ngd_btdata_snapshot.cpp", "ngd14_session/ngd_native_session_client.cpp", "ngd14_session/ngd_hci_probe.cpp"],
++ compile_multilib: "64",
++ shared_libs: ["android.hardware.bluetooth@1.0", "libhidlbase", "libhidltransport", "libutils", "libcrypto"],
++ cflags: ["-Wall", "-Wextra", "-Werror"],
++}
+--- a/jni/com_android_bluetooth_btservice_AdapterService.cpp
++++ b/jni/com_android_bluetooth_btservice_AdapterService.cpp
+@@ -634,6 +634,7 @@
+     acquire_wake_lock_callout, release_wake_lock_callout,
+ };
+ 
++#include "ngd14_qti_platform_loader.h"
+ #define NGD_BT_LIBRARY_NAME "libbluetooth_qti.so"
+ 
+ int hal_util_load_bt_library(const bt_interface_t** interface) {
+@@ -641,8 +642,7 @@
+   bt_interface_t* itf = nullptr;
+ 
+   // Candidate backend is selected in this library, without changing getprop.
+-  const char* path = NGD_BT_LIBRARY_NAME;
+-  void* handle = dlopen(path, RTLD_NOW);
++  void* handle = ngd14LoadOemQti();
+   if (!handle) {
+     const char* err_str = dlerror();
+     LOG(ERROR) << __func__ << ": failed to load Bluetooth library, error="
+--- a/jni/ngd14_qti_platform_loader.h
++++ b/jni/ngd14_qti_platform_loader.h
+@@ -0,0 +1,24 @@
++// Android 10 platform-only loader. Called only after root admission and HCI release.
++// Reuse OEM platform namespace; never bundle a second linker or Qualcomm stack.
++#include <android/dlext.h>
++#include <nativeloader/dlext_namespaces.h>
++#include <dlfcn.h>
++static void* ngd14LoadOemQti() {
++  // This actual ROM explicitly exposes libandroid_runtime.so to app namespaces.
++  // dlsym(handle) walks that library's original platform dependency graph.
++  static void* runtime = dlopen("libandroid_runtime.so", RTLD_NOW | RTLD_NOLOAD);
++  if (!runtime) { ALOGE("NGD14_QTI_LOAD_DENIED: platform runtime handle unavailable"); return nullptr; }
++  auto get_namespace = reinterpret_cast<decltype(&android_get_exported_namespace)>(
++      dlsym(runtime, "android_get_exported_namespace"));
++  if (!get_namespace) { ALOGE("NGD14_QTI_LOAD_DENIED: exported namespace API unavailable"); return nullptr; }
++  android_namespace_t* ns = get_namespace("platform");
++  if (!ns) ns = get_namespace("default");
++  if (!ns) { ALOGE("NGD14_QTI_LOAD_DENIED: OEM platform namespace not exported"); return nullptr; }
++  android_dlextinfo info = {};
++  info.flags = ANDROID_DLEXT_USE_NAMESPACE;
++  info.library_namespace = ns;
++  void* qti = android_dlopen_ext("/system/lib64/libbluetooth_qti.so", RTLD_NOW, &info);
++  if (!qti) ALOGE("NGD14_QTI_LOAD_DENIED: %s", dlerror());
++  else ALOGI("NGD14_QTI_PLATFORM_NAMESPACE: original OEM stack loaded after root admission");
++  return qti;
++}
+--- a/jni/ngd14_session/ngd12_artifact_digests.h
++++ b/jni/ngd14_session/ngd12_artifact_digests.h
+@@ -0,0 +1,4 @@
++// Pinned to the actual compiled payload; no placeholder can pass runtime preflight.
++#define NGD12_HOLD_SHA "63c4f49e5a91ab5373b81b322685374ed73b9cb887659c2e17c1af2d0067980b"
++#define NGD12_APK_SHA "801a8d07f4efa300588ee2866f52cc8768643f933c174c19f1c26eb960ffa212"
++#define NGD12_JNI_SHA "c8980cef9dd527c97dda03edd58a3bbe21f1ba932b4e41499b308177f9771a0a"
+--- a/jni/ngd14_session/ngd14_host_heartbeat.h
++++ b/jni/ngd14_session/ngd14_host_heartbeat.h
+@@ -0,0 +1,23 @@
++#ifndef NGD14_HOST_HEARTBEAT_H
++#define NGD14_HOST_HEARTBEAT_H
++#include <cstddef>
++#include <cstdint>
++namespace ngd14 {
++class HostHeartbeat {
++ public:
++  explicit HostHeartbeat(uint64_t now):deadline_(now+3000){}
++  bool Feed(const char* bytes,size_t size,uint64_t now) {
++    if(!Alive(now))return false;
++    static constexpr char token[]="NGD14_KEEPALIVE\n";
++    for(size_t i=0;i<size;++i){
++      if(bytes[i]!=token[partial_]){valid_=false;return false;}
++      if(++partial_==sizeof(token)-1){partial_=0;deadline_=now+3000;}
++    }
++    return true;
++  }
++  bool Alive(uint64_t now) const {return valid_&&now<deadline_;}
++ private:
++  uint64_t deadline_;size_t partial_=0;bool valid_=true;
++};
++}
++#endif
+--- a/jni/ngd14_session/ngd14_host_heartbeat_test.cpp
++++ b/jni/ngd14_session/ngd14_host_heartbeat_test.cpp
+@@ -0,0 +1,13 @@
++#include "ngd14_host_heartbeat.h"
++#include <cassert>
++#include <cstring>
++#include <cstdio>
++int main(){
++ const char* t="NGD14_KEEPALIVE\n";ngd14::HostHeartbeat h(100);
++ assert(h.Alive(3099)&&!h.Alive(3100));assert(!h.Feed(t,strlen(t),3100));
++ ngd14::HostHeartbeat healthy(100);assert(healthy.Feed(t,5,2000));assert(!healthy.Alive(3100));
++ ngd14::HostHeartbeat fragmented(100);assert(fragmented.Feed(t,5,1000));assert(fragmented.Feed(t+5,strlen(t)-5,2000));assert(fragmented.Alive(4999)&&!fragmented.Alive(5000));
++ ngd14::HostHeartbeat malformed(0);assert(!malformed.Feed("NGD14_WRONG\n",12,100));assert(!malformed.Alive(101));
++ ngd14::HostHeartbeat repeated(0);for(unsigned now=1000;now<=60000;now+=1000)assert(repeated.Feed(t,strlen(t),now));assert(!repeated.Alive(63000));
++ puts("PASS: host heartbeat expires after 3s; fragmented and repeated frames accepted; malformed, partial-only and expired renewals denied");
++}
+--- a/jni/ngd14_session/ngd_btdata_snapshot.cpp
++++ b/jni/ngd14_session/ngd_btdata_snapshot.cpp
+@@ -0,0 +1,110 @@
++#include "ngd_btdata_snapshot.h"
++#include <sys/xattr.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <dirent.h>
++#include <errno.h>
++#include <cstring>
++#include <algorithm>
++#include <cstdio>
++#include <cstdint>
++namespace ngd12 {
++bool DataSnapshot::Excluded(const std::string& path) const {
++ return path=="/data/misc/bluetooth/logs"||path.find("/data/misc/bluetooth/logs/")==0;
++}
++bool DataSnapshot::Walk(const std::string& path,std::map<std::string,Node>* nodes,bool capture) const {
++ if(Excluded(path))return true;
++ struct stat s{};if(lstat(path.c_str(),&s))return errno==ENOENT;
++ if(S_ISLNK(s.st_mode)||(!S_ISDIR(s.st_mode)&&!S_ISREG(s.st_mode)&&!(S_ISSOCK(s.st_mode)&&!capture)))return false;
++ if(nodes->size()>=4096)return false;
++ Node n;n.meta=s;
++ if(capture){
++  if(S_ISREG(s.st_mode)){
++   size_t total=0;for(const auto& e:*nodes)total+=e.second.data.size();
++   if(s.st_size<0||static_cast<uint64_t>(s.st_size)>32*1024*1024||total+s.st_size>32*1024*1024)return false;
++   int fd=open(path.c_str(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW);if(fd<0)return false;
++   n.data.resize(s.st_size);size_t pos=0;while(pos<n.data.size()){ssize_t k=read(fd,&n.data[pos],n.data.size()-pos);if(k<=0){close(fd);return false;}pos+=k;}
++   struct stat after{};bool ok=fstat(fd,&after)==0&&after.st_ino==s.st_ino&&after.st_size==s.st_size&&after.st_mtim.tv_sec==s.st_mtim.tv_sec&&after.st_mtim.tv_nsec==s.st_mtim.tv_nsec;close(fd);if(!ok)return false;
++  }
++  ssize_t size=llistxattr(path.c_str(),nullptr,0);if(size<0)return false;std::vector<char> names(size);
++  if(size&&llistxattr(path.c_str(),names.data(),names.size())!=size)return false;
++  for(size_t pos=0;pos<names.size();){std::string key(names.data()+pos);pos+=key.size()+1;
++   ssize_t count=lgetxattr(path.c_str(),key.c_str(),nullptr,0);if(count<0||count>65536)return false;std::string value(count,'\0');
++   if(count&&lgetxattr(path.c_str(),key.c_str(),&value[0],value.size())!=count)return false;n.attrs[key]=value;
++  }
++ }
++ (*nodes)[path]=n;
++ if(S_ISDIR(s.st_mode)){DIR* d=opendir(path.c_str());if(!d)return false;bool ok=true;struct dirent* e;
++  while((e=readdir(d))){if(!strcmp(e->d_name,".")||!strcmp(e->d_name,".."))continue;if(!Walk(path+"/"+e->d_name,nodes,capture)){ok=false;break;}}
++  closedir(d);if(!ok)return false;
++ }
++ return true;
++}
++bool DataSnapshot::Capture(){nodes_.clear();captured_=false;for(const auto& path:roots_)if(!Walk(path,&nodes_,true))return false;captured_=true;return true;}
++bool DataSnapshot::SaveExclusive(const char* path) const {
++ if(!captured_)return false;int fd=open(path,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);if(fd<0)return false;
++ FILE* f=fdopen(fd,"wb");if(!f){close(fd);return false;}
++ bool ok=fwrite("NGD12DATA1",1,10,f)==10;
++ auto scalar=[&](uint64_t v){if(fwrite(&v,sizeof(v),1,f)!=1)ok=false;};
++ auto bytes=[&](const std::string& v){scalar(v.size());if(fwrite(v.data(),1,v.size(),f)!=v.size())ok=false;};
++ scalar(nodes_.size());
++ for(const auto& row:nodes_){const Node& n=row.second;bytes(row.first);scalar(n.meta.st_mode);scalar(n.meta.st_uid);scalar(n.meta.st_gid);scalar(n.meta.st_atim.tv_sec);scalar(n.meta.st_atim.tv_nsec);scalar(n.meta.st_mtim.tv_sec);scalar(n.meta.st_mtim.tv_nsec);bytes(n.data);scalar(n.attrs.size());for(const auto& a:n.attrs){bytes(a.first);bytes(a.second);}}
++ if(fflush(f)||fsync(fd))ok=false;if(fclose(f))ok=false;return ok;
++}
++bool DataSnapshot::RestoreOnly(const std::vector<std::string>& selected) const {
++ if(!captured_||selected.empty())return false;
++ for(const auto& root:selected)if(std::find(roots_.begin(),roots_.end(),root)==roots_.end())return false;
++ DataSnapshot subset(selected);subset.captured_=true;
++ for(const auto& row:nodes_)for(const auto& root:selected)
++  if(row.first==root||row.first.find(root+"/")==0){subset.nodes_.insert(row);break;}
++ return subset.Restore();
++}
++bool DataSnapshot::Restore() const {
++ if(!captured_)return false;
++ std::map<std::string,Node> current;for(const auto& path:roots_)if(!Walk(path,&current,false))return false;
++ // Remove only entries created after this snapshot, under the explicit roots.
++ for(auto it=current.rbegin();it!=current.rend();++it)if(nodes_.count(it->first)==0){
++  int result=S_ISDIR(it->second.meta.st_mode)?rmdir(it->first.c_str()):unlink(it->first.c_str());
++  if(result&&errno==ENOTEMPTY&&it->first=="/data/misc/bluetooth") {
++   DIR* d=opendir(it->first.c_str());if(!d)return false;bool only_logs=true;struct dirent* e;
++   while((e=readdir(d)))if(strcmp(e->d_name,".")&&strcmp(e->d_name,"..")&&strcmp(e->d_name,"logs"))only_logs=false;
++   closedir(d);if(only_logs)result=0;
++  }
++  if(result)return false;
++ }
++ for(const auto& row:nodes_){const std::string& path=row.first;const Node& n=row.second;
++  struct stat now{};if(lstat(path.c_str(),&now)==0&&((now.st_mode&S_IFMT)!=(n.meta.st_mode&S_IFMT)))return false;
++  if(S_ISDIR(n.meta.st_mode)){if(mkdir(path.c_str(),0700)&&errno!=EEXIST)return false;}
++  else {int fd=open(path.c_str(),O_WRONLY|O_CREAT|O_TRUNC|O_NOFOLLOW|O_CLOEXEC,0600);if(fd<0)return false;
++   size_t pos=0;while(pos<n.data.size()){ssize_t k=write(fd,n.data.data()+pos,n.data.size()-pos);if(k<=0){close(fd);return false;}pos+=k;}if(fsync(fd)){close(fd);return false;}close(fd);
++  }
++ }
++ // Restore directories last so their timestamps survive child restoration.
++ for(auto it=nodes_.rbegin();it!=nodes_.rend();++it){const auto& path=it->first;const Node& n=it->second;
++  if(lchown(path.c_str(),n.meta.st_uid,n.meta.st_gid)||chmod(path.c_str(),n.meta.st_mode&07777))return false;
++  ssize_t size=llistxattr(path.c_str(),nullptr,0);if(size<0)return false;std::vector<char> names(size);if(size&&llistxattr(path.c_str(),names.data(),size)!=size)return false;
++  for(size_t p=0;p<names.size();){std::string key(names.data()+p);p+=key.size()+1;if(n.attrs.count(key)==0&&lremovexattr(path.c_str(),key.c_str()))return false;}
++  for(const auto& a:n.attrs)if(lsetxattr(path.c_str(),a.first.c_str(),a.second.data(),a.second.size(),0))return false;
++  struct timespec times[2]={n.meta.st_atim,n.meta.st_mtim};if(utimensat(AT_FDCWD,path.c_str(),times,AT_SYMLINK_NOFOLLOW))return false;
++ }
++ return true;
++}
++bool DataSnapshot::LoadVerified(const char* path) {
++ captured_=false;nodes_.clear();int fd=open(path,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);if(fd<0)return false;
++ struct stat meta{};if(fstat(fd,&meta)||!S_ISREG(meta.st_mode)||meta.st_uid!=geteuid()||(meta.st_mode&0777)!=0600||meta.st_size>40*1024*1024){close(fd);return false;}
++ FILE* f=fdopen(fd,"rb");if(!f){close(fd);return false;}char magic[10]={};bool ok=fread(magic,1,10,f)==10&&!memcmp(magic,"NGD12DATA1",10);
++ auto scalar=[&](){uint64_t n=0;if(fread(&n,sizeof(n),1,f)!=1)ok=false;return n;};
++ size_t total=0;auto bytes=[&](size_t max){std::string v;uint64_t n=scalar();if(!ok||n>max||total+n>40*1024*1024){ok=false;return v;}v.resize(n);if(n&&fread(&v[0],1,n,f)!=n)ok=false;total+=n;return v;};
++ uint64_t count=scalar();if(count>4096)ok=false;
++ for(uint64_t i=0;i<count&&ok;++i){std::string name=bytes(4096);bool allowed=false;for(const auto& root:roots_)if(name==root||name.find(root+"/")==0)allowed=true;
++  const bool bad_end=name.size()>=3&&(name.compare(name.size()-3,3,"/..")==0||name.compare(name.size()-2,2,"/.")==0);
++  if(!allowed||bad_end||name.find("//")!=std::string::npos||name.find("/../")!=std::string::npos||name.find("/./")!=std::string::npos||name.size()<1||name.back()=='/'||name.find('\0')!=std::string::npos||Excluded(name)||nodes_.count(name)){ok=false;break;}
++  Node n;n.meta.st_mode=scalar();n.meta.st_uid=scalar();n.meta.st_gid=scalar();n.meta.st_atim.tv_sec=scalar();n.meta.st_atim.tv_nsec=scalar();n.meta.st_mtim.tv_sec=scalar();n.meta.st_mtim.tv_nsec=scalar();
++  if((!S_ISDIR(n.meta.st_mode)&&!S_ISREG(n.meta.st_mode))||n.meta.st_atim.tv_nsec>=1000000000||n.meta.st_mtim.tv_nsec>=1000000000){ok=false;break;}
++  n.data=bytes(32*1024*1024);uint64_t attrs=scalar();if(attrs>256)ok=false;
++  for(uint64_t k=0;k<attrs&&ok;++k){std::string key=bytes(1024),value=bytes(65536);if(key.empty()||key.find('\0')!=std::string::npos||n.attrs.count(key)){ok=false;break;}n.attrs[key]=value;}
++  nodes_[name]=n;
++ }
++ if(ok&&fgetc(f)!=EOF)ok=false;fclose(f);captured_=ok;if(!ok)nodes_.clear();return ok;
++}
++}
+--- a/jni/ngd14_session/ngd_btdata_snapshot.h
++++ b/jni/ngd14_session/ngd_btdata_snapshot.h
+@@ -0,0 +1,27 @@
++#ifndef NGD_BTDATA_SNAPSHOT_H
++#define NGD_BTDATA_SNAPSHOT_H
++#include <map>
++#include <string>
++#include <vector>
++#include <sys/stat.h>
++namespace ngd12 {
++// Configuration only: excludes /data/misc/bluetooth/logs. Never follows symlinks.
++class DataSnapshot {
++ public:
++  explicit DataSnapshot(std::vector<std::string> roots) : roots_(roots) {}
++  bool Capture();
++  bool SaveExclusive(const char* path) const;
++  bool LoadVerified(const char* path);
++  bool Restore() const;
++  bool RestoreOnly(const std::vector<std::string>& selected) const;
++  size_t Count() const { return nodes_.size(); }
++ private:
++  struct Node {struct stat meta{};std::string data;std::map<std::string,std::string> attrs;};
++  bool Walk(const std::string& path,std::map<std::string,Node>* nodes,bool capture) const;
++  bool Excluded(const std::string& path) const;
++  std::vector<std::string> roots_;
++  std::map<std::string,Node> nodes_;
++  bool captured_=false;
++};
++}
++#endif
+--- a/jni/ngd14_session/ngd_btdata_snapshot_test.cpp
++++ b/jni/ngd14_session/ngd_btdata_snapshot_test.cpp
+@@ -0,0 +1,30 @@
++#include "ngd_btdata_snapshot.h"
++#include <cassert>
++#include <unistd.h>
++#include <sys/stat.h>
++#include <sys/xattr.h>
++#include <fstream>
++#include <sstream>
++#include <cstdio>
++static void Write(const std::string& p,const std::string& value){std::ofstream f(p);f<<value;assert(f.good());}
++static std::string Read(const std::string& p){std::ifstream f(p);std::stringstream s;s<<f.rdbuf();return s.str();}
++int main(){
++ char pattern[]="/opt/ngd/etap14/snapshotXXXXXX";char* d=mkdtemp(pattern);assert(d);std::string dir=d,root=dir+"/config",file=root+"/bt_config.conf",backup=dir+"/backup";
++ assert(mkdir(root.c_str(),0700)==0);Write(file,"OEM_PAIRING_DATA");assert(chmod(file.c_str(),0640)==0);assert(setxattr(file.c_str(),"user.ngd-test","old",3,0)==0);
++ ngd12::DataSnapshot original({root});assert(original.Capture());assert(original.Count()==2);assert(original.SaveExclusive(backup.c_str()));assert(!original.SaveExclusive(backup.c_str()));
++ Write(file,"NEW_NGD_PAIRING_DATA");Write(root+"/new-device","TEMP");assert(mkdir((root+"/new-dir").c_str(),0700)==0);Write(root+"/new-dir/config","TEMP");assert(setxattr(file.c_str(),"user.ngd-test","new",3,0)==0);
++ ngd12::DataSnapshot loaded({root});assert(loaded.LoadVerified(backup.c_str()));assert(loaded.Restore());assert(Read(file)=="OEM_PAIRING_DATA");assert(access((root+"/new-device").c_str(),F_OK)!=0);assert(access((root+"/new-dir").c_str(),F_OK)!=0);
++ struct stat s{};assert(stat(file.c_str(),&s)==0&&(s.st_mode&0777)==0640);char value[8]={};assert(getxattr(file.c_str(),"user.ngd-test",value,sizeof(value))==3&&std::string(value,3)=="old");
++ assert(symlink("/etc/passwd",(root+"/unexpected-link").c_str())==0);ngd12::DataSnapshot reject({root});assert(!reject.Capture());assert(!loaded.Restore());assert(unlink((root+"/unexpected-link").c_str())==0);
++ ngd12::DataSnapshot wrong_roots({dir+"/different"});assert(!wrong_roots.LoadVerified(backup.c_str()));
++ Write(dir+"/corrupt","bad");assert(!reject.LoadVerified((dir+"/corrupt").c_str()));
++ // Package-only rollback must leave a still-running OEM's Bluetooth data untouched.
++ std::string other=dir+"/package";assert(mkdir(other.c_str(),0700)==0);Write(other+"/prefs","OEM_APP");
++ ngd12::DataSnapshot combined({root,other});assert(combined.Capture());Write(file,"OEM_CHANGED_WHILE_RUNNING");Write(other+"/prefs","TEST_APP");
++ assert(!combined.RestoreOnly({dir}));assert(combined.RestoreOnly({other}));
++ assert(Read(file)=="OEM_CHANGED_WHILE_RUNNING"&&Read(other+"/prefs")=="OEM_APP");
++ unlink((other+"/prefs").c_str());rmdir(other.c_str());
++ // Remove only test-owned entries and the exact generated temporary directory.
++ unlink((dir+"/corrupt").c_str());unlink(file.c_str());rmdir(root.c_str());unlink(backup.c_str());rmdir(dir.c_str());
++ puts("PASS: persisted BT data roundtrip, old pairing data/metadata/xattrs restored, new files removed, symlinks and wrong roots rejected; selected package-only restore preserves live OEM data");
++}
+--- a/jni/ngd14_session/ngd_hci_probe.cpp
++++ b/jni/ngd14_session/ngd_hci_probe.cpp
+@@ -0,0 +1,179 @@
++#include "ngd_hci_probe.h"
++#include <algorithm>
++#include <climits>
++#include <fstream>
++#include <sstream>
++#ifdef __ANDROID__
++#include <sys/system_properties.h>
++#include <sys/wait.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <poll.h>
++#include <spawn.h>
++#include <signal.h>
++#include <time.h>
++#include <errno.h>
++extern char** environ;
++#endif
++namespace ngd {
++static const char kHci[] = "android.hardware.bluetooth@1.0::IBluetoothHci/default";
++static bool PositivePid(const std::string& text, int* pid) {
++  if (text.empty()) return false;
++  unsigned n = 0;
++  for (char c : text) {
++    if (c < '0' || c > '9' || n > (static_cast<unsigned>(INT_MAX) - (c-'0')) / 10)
++      return false;
++    n = n * 10 + c - '0';
++  }
++  if (!n) return false;
++  *pid = static_cast<int>(n);
++  return true;
++}
++HciSnapshot ParseHciSnapshot(const std::string& text, bool completed) {
++  HciSnapshot result;
++  if (!completed || text.empty()) return result;
++  bool binderized = false, columns = false, found = false;
++  std::istringstream input(text);
++  std::string line;
++  while (std::getline(input, line)) {
++    if (line.find("| All ") != std::string::npos) {
++      binderized = line.find("All binderized services") != std::string::npos;
++      continue;
++    }
++    if (!binderized) continue;
++    if (line.find("Server") != std::string::npos && line.find("Clients") != std::string::npos) {
++      columns = true;
++      continue;
++    }
++    if (line.find(kHci) == std::string::npos) continue;
++    std::istringstream row(line);
++    std::vector<std::string> values;
++    std::string value;
++    while (row >> value) values.push_back(value);
++    // Match the captured Android10 lshal schema, never infer a truncated column.
++    if (found || !columns || values.size() < 5 || values[2] != kHci ||
++        values[1] != "Y" || values[3].find('/') == std::string::npos ||
++        !PositivePid(values[4], &result.server_pid)) return HciSnapshot{};
++    for (size_t i = 5; i < values.size(); ++i) {
++      int pid = -1;
++      if (!PositivePid(values[i], &pid)) return HciSnapshot{};
++      result.clients.push_back(pid);
++    }
++    found = true;
++  }
++  result.valid = found;
++  return result;
++}
++HciProbeResult EvaluateHci(const HciSnapshot& s, const std::string& blink,
++                          int manager, int self, bool admitted) {
++  HciProbeResult r;
++  r.snapshot = s;
++  if (blink == "running" || blink == "restarting") {
++    r.occupancy = HciOccupancy::Busy;
++    r.reason = "blink_active_or_reacquire_risk";
++    return r;
++  }
++  if (blink != "stopped" || !s.valid) return r;
++  for (int pid : s.clients) {
++    if (pid == manager && manager > 0 && manager != s.server_pid) continue;
++    if (admitted && pid == self && self > 0) continue;
++    r.occupancy = HciOccupancy::Busy;
++    r.reason = "foreign_or_unidentified_hci_client";
++    return r;
++  }
++  r.occupancy = HciOccupancy::NoForeignClientObserved;
++  r.reason = "no_foreign_reference_observed_not_release_proof";
++  return r;
++}
++const char* OccupancyName(HciOccupancy s) {
++  switch (s) {
++    case HciOccupancy::Busy: return "BUSY";
++    case HciOccupancy::NoForeignClientObserved: return "NO_FOREIGN_CLIENT_OBSERVED";
++    default: return "UNKNOWN";
++  }
++}
++#ifdef __ANDROID__
++static uint64_t NowMs() {
++  struct timespec t = {};
++  if (clock_gettime(CLOCK_BOOTTIME, &t) != 0) return 0;
++  return static_cast<uint64_t>(t.tv_sec) * 1000 + t.tv_nsec / 1000000;
++}
++static std::string Cmdline(int pid) {
++  std::ifstream f("/proc/" + std::to_string(pid) + "/cmdline");
++  std::string name;
++  std::getline(f, name, '\0');
++  return name;
++}
++static std::string Lshal(bool* completed) {
++  *completed = false;
++  int fd[2];
++  if (pipe2(fd, O_CLOEXEC) != 0) return {};
++  posix_spawn_file_actions_t actions;
++  if (posix_spawn_file_actions_init(&actions) != 0) { close(fd[0]); close(fd[1]); return {}; }
++  int err = posix_spawn_file_actions_addclose(&actions, fd[0]);
++  err |= posix_spawn_file_actions_adddup2(&actions, fd[1], STDOUT_FILENO);
++  err |= posix_spawn_file_actions_adddup2(&actions, fd[1], STDERR_FILENO);
++  err |= posix_spawn_file_actions_addclose(&actions, fd[1]);
++  char arg0[] = "/system/bin/lshal";
++  char* argv[] = {arg0, nullptr};
++  pid_t child = -1;
++  if (!err) err = posix_spawn(&child, arg0, &actions, nullptr, argv, environ);
++  posix_spawn_file_actions_destroy(&actions);
++  close(fd[1]);
++  if (err) { close(fd[0]); return {}; }
++  if (fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
++    close(fd[0]); kill(child, SIGKILL); waitpid(child, nullptr, 0); return {};
++  }
++  const uint64_t start = NowMs();
++  const uint64_t limit = start + 2000;
++  std::string text;
++  bool eof = false, exited = false, failed = !start;
++  int status = 0;
++  while (!failed) {
++    char buf[8192];
++    ssize_t n;
++    while ((n = read(fd[0], buf, sizeof(buf))) > 0) {
++      text.append(buf, static_cast<size_t>(n));
++      if (text.size() > 1024 * 1024) { failed = true; break; }
++    }
++    if (n == 0) eof = true;
++    if (n < 0 && errno != EAGAIN && errno != EINTR) failed = true;
++    if (!exited) {
++      const pid_t waited = waitpid(child, &status, WNOHANG);
++      if (waited == child) exited = true;
++      else if (waited < 0 && errno != EINTR) failed = true;
++    }
++    if (eof && exited) break;
++    const uint64_t now = NowMs();
++    if (!now || now >= limit) { failed = true; break; }
++    struct pollfd poll_fd = {fd[0], POLLIN, 0};
++    poll(&poll_fd, 1, static_cast<int>(std::min<uint64_t>(limit-now, 20)));
++  }
++  close(fd[0]);
++  // Only our own bounded, read-only lshal child may be reaped; never BLINK/HAL.
++  if (!exited) { kill(child, SIGKILL); waitpid(child, &status, 0); }
++  *completed = !failed && eof && exited && WIFEXITED(status) && WEXITSTATUS(status) == 0;
++  return text;
++}
++HciProbeResult ProbeHciForProcess(int expected_pid, bool admitted, bool barrier) {
++  if (barrier && geteuid()!=0) return HciProbeResult{};
++  char state[PROP_VALUE_MAX] = {};
++  __system_property_get("init.svc.blink", state);
++  bool completed = false;
++  const std::string text = Lshal(&completed);
++  HciSnapshot s = ParseHciSnapshot(text, completed);
++  int manager = -1;
++  for (int pid : s.clients) {
++    if (Cmdline(pid) == "/system/bin/hwservicemanager") {
++      if (manager > 0 && manager != pid) return HciProbeResult{};
++      manager = pid;
++    }
++  }
++  return EvaluateHci(s, barrier ? "stopped" : state, manager, expected_pid, admitted);
++}
++HciProbeResult ProbeHci(bool admitted) { return ProbeHciForProcess(getpid(),admitted,false); }
++#else
++HciProbeResult ProbeHciForProcess(int, bool, bool) { return HciProbeResult{}; }
++HciProbeResult ProbeHci(bool) { return HciProbeResult{}; }
++#endif
++}  // namespace ngd
+--- a/jni/ngd14_session/ngd_hci_probe.h
++++ b/jni/ngd14_session/ngd_hci_probe.h
+@@ -0,0 +1,25 @@
++// Read-only admission evidence. This is not an HCI handover protocol.
++#ifndef NGD_HCI_PROBE_H
++#define NGD_HCI_PROBE_H
++#include <string>
++#include <vector>
++namespace ngd {
++enum class HciOccupancy { Unknown, Busy, NoForeignClientObserved };
++struct HciSnapshot {
++  bool valid = false;
++  int server_pid = -1;
++  std::vector<int> clients;
++};
++struct HciProbeResult {
++  HciOccupancy occupancy = HciOccupancy::Unknown;
++  const char* reason = "incomplete_evidence";
++  HciSnapshot snapshot;
++};
++HciSnapshot ParseHciSnapshot(const std::string& text, bool command_completed);
++HciProbeResult EvaluateHci(const HciSnapshot& snapshot, const std::string& blink_state,
++                          int manager_pid, int self_pid, bool already_admitted);
++HciProbeResult ProbeHci(bool already_admitted);
++HciProbeResult ProbeHciForProcess(int expected_pid, bool admitted, bool verified_maintenance_barrier);
++const char* OccupancyName(HciOccupancy state);
++}  // namespace ngd
++#endif
+--- a/jni/ngd14_session/ngd_hci_session.h
++++ b/jni/ngd14_session/ngd_hci_session.h
+@@ -0,0 +1,36 @@
++// Copyright 2026. NGD controlled test admission; this does NOT release OEM HCI.
++#ifndef NGD_HCI_SESSION_H
++#define NGD_HCI_SESSION_H
++#include <stdint.h>
++#include <string.h>
++namespace ngd {
++constexpr uint64_t kMaxSessionMs = 60000;
++inline bool ParseDeadline(const char* text, uint64_t* value) {
++  if (!text || !*text || !value) return false;
++  uint64_t n = 0;
++  for (const char* p = text; *p; ++p) {
++    if (*p < '0' || *p > '9') return false;
++    const uint64_t digit = static_cast<uint64_t>(*p - '0');
++    if (n > (UINT64_MAX - digit) / 10) return false;
++    n = n * 10 + digit;
++  }
++  *value = n;
++  return true;
++}
++// The mode is operator authorization, NOT proof that BLINK released the HAL.
++// Never renew an already admitted session by extending the property deadline.
++inline uint64_t RemainingMs(const char* mode, const char* text, uint64_t now,
++                            uint64_t captured_deadline, uint64_t* effective) {
++  uint64_t requested = 0;
++  if (effective) *effective = 0;
++  if (!mode || strcmp(mode, "manual-after-oem-release") != 0 ||
++      !ParseDeadline(text, &requested) || requested <= now ||
++      requested - now > kMaxSessionMs) return 0;
++  uint64_t deadline = requested;
++  if (captured_deadline && captured_deadline < deadline) deadline = captured_deadline;
++  if (deadline <= now) return 0;
++  if (effective) *effective = deadline;
++  return deadline - now;
++}
++}  // namespace ngd
++#endif
+--- a/jni/ngd14_session/ngd_native_session.h
++++ b/jni/ngd14_session/ngd_native_session.h
+@@ -0,0 +1,34 @@
++#ifndef NGD_NATIVE_SESSION_H
++#define NGD_NATIVE_SESSION_H
++#include <stdint.h>
++#include <string>
++namespace ngd12 {
++constexpr uint64_t kSessionMaxMs = 60000;
++constexpr const char* kSocketName = "ngd.native.android.session.v12";
++// Valid only while a root peer has verified the OEM maintenance barrier.
++bool QueryRootSession(bool admit, uint64_t* deadline_ms);
++bool RequestRootRestore();
++enum class Action { Preflight, MaskBlink, DisableNgd, BleScanOff, StopBlink,
++  OriginalBlinkGone, CloseHci, HciFree, SnapshotData, Arm, EnableNgd, WaitAndroidOn,
++  Disarm, NgdGone, RestoreData, UnmaskBlink, RestoreSettings, StartBlink, OemOwner };
++const char* ActionName(Action action);
++class Operations {
++ public:
++  virtual ~Operations() = default;
++  virtual bool Do(Action action) = 0;
++};
++class Transaction {
++ public:
++  explicit Transaction(Operations& ops) : ops_(ops) {}
++  bool Prepare();
++  bool Restore();
++  bool touched() const { return touched_; }
++ private:
++  Operations& ops_;
++  bool touched_ = false;
++  bool oem_stopped_ = false;
++  bool ngd_may_own_ = false;
++  bool restored_ = false;
++};
++}  // namespace ngd12
++#endif
+--- a/jni/ngd14_session/ngd_native_session_client.cpp
++++ b/jni/ngd14_session/ngd_native_session_client.cpp
+@@ -0,0 +1,54 @@
++#include "ngd_native_session.h"
++#include "ngd_hci_session.h"
++#ifdef __ANDROID__
++#include <sys/socket.h>
++#include <sys/un.h>
++#include <unistd.h>
++#include <stddef.h>
++#include <cstring>
++#endif
++namespace ngd12 {
++bool RequestRootRestore() {
++#ifdef __ANDROID__
++  if (geteuid()!=0) return false;
++  int fd=socket(AF_UNIX,SOCK_SEQPACKET|SOCK_CLOEXEC,0);if(fd<0)return false;
++  struct timeval timeout={3,0};setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));setsockopt(fd,SOL_SOCKET,SO_SNDTIMEO,&timeout,sizeof(timeout));
++  struct sockaddr_un addr={};addr.sun_family=AF_UNIX;const size_t n=std::strlen(kSocketName);std::memcpy(addr.sun_path+1,kSocketName,n);
++  bool ok=connect(fd,reinterpret_cast<sockaddr*>(&addr),offsetof(sockaddr_un,sun_path)+1+n)==0;
++  struct ucred peer={};socklen_t len=sizeof(peer);ok=ok&&getsockopt(fd,SOL_SOCKET,SO_PEERCRED,&peer,&len)==0&&peer.uid==0;
++  if(ok)ok=send(fd,"RESTORE",7,MSG_NOSIGNAL)==7;char reply[16]={};ssize_t count=ok?recv(fd,reply,sizeof(reply),0):-1;close(fd);
++  return count==9&&std::memcmp(reply,"RESTORING",9)==0;
++#else
++  return false;
++#endif
++}
++bool QueryRootSession(bool admit, uint64_t* deadline) {
++  if (!deadline) return false;
++  *deadline = 0;
++#ifdef __ANDROID__
++  int fd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0);
++  if (fd < 0) return false;
++  struct timeval timeout = {3, 0};
++  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
++  setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
++  struct sockaddr_un addr = {};
++  addr.sun_family = AF_UNIX;
++  const size_t n = std::strlen(kSocketName);
++  std::memcpy(addr.sun_path + 1, kSocketName, n);
++  bool ok = connect(fd, reinterpret_cast<sockaddr*>(&addr), offsetof(sockaddr_un,sun_path)+1+n) == 0;
++  struct ucred peer = {}; socklen_t len = sizeof(peer);
++  ok = ok && getsockopt(fd,SOL_SOCKET,SO_PEERCRED,&peer,&len)==0 && peer.uid==0;
++  const char* request = admit ? "ADMIT" : "CHECK";
++  if (ok) ok = send(fd,request,std::strlen(request),MSG_NOSIGNAL)==static_cast<ssize_t>(std::strlen(request));
++  char response[96] = {};
++  ssize_t count = ok ? recv(fd,response,sizeof(response)-1,0) : -1;
++  close(fd);
++  if (count <= 8 || std::strncmp(response,"NGD12_OK ",9)!=0) return false;
++  response[count] = 0;
++  return ngd::ParseDeadline(response+9,deadline) && *deadline>0;
++#else
++  (void)admit;
++  return false;
++#endif
++}
++}  // namespace ngd12
+--- a/jni/ngd14_session/ngd_native_session_main.cpp
++++ b/jni/ngd14_session/ngd_native_session_main.cpp
+@@ -0,0 +1,424 @@
++// Maintenance-only controller. No installation, remount, flash or automatic reboot.
++#include "ngd_native_session.h"
++#include "ngd14_host_heartbeat.h"
++#include "ngd_hci_probe.h"
++#include "ngd_btdata_snapshot.h"
++#ifdef __ANDROID__
++#include "ngd12_artifact_digests.h"
++#include <android/hardware/bluetooth/1.0/IBluetoothHci.h>
++#include <openssl/sha.h>
++#include <sys/socket.h>
++#include <sys/un.h>
++#include <sys/system_properties.h>
++#include <sys/mount.h>
++#include <sys/stat.h>
++#include <sys/wait.h>
++#include <dirent.h>
++#include <fcntl.h>
++#include <poll.h>
++#include <spawn.h>
++#include <signal.h>
++#include <sched.h>
++#include <unistd.h>
++#include <stddef.h>
++#include <time.h>
++#include <errno.h>
++#include <atomic>
++#include <thread>
++#include <fstream>
++#include <sstream>
++#include <vector>
++#include <cstdio>
++#include <cstring>
++#include <cstdlib>
++#include <algorithm>
++extern char** environ;
++namespace {
++constexpr const char* kBlink="/system/bin/blink";
++constexpr const char* kHold="/data/local/tmp/ngd_blink_hold12";
++constexpr const char* kJournal="/data/local/tmp/ngd14-inode-journal";
++constexpr const char* kProcess="com.android.bluetooth.ngd";
++constexpr const char* kFactorySha="e2ac7bf449db522d53d8c3c54769802541e92a4d4935bbe46482e93387374a7c";
++constexpr const char* kFingerprint="qti/trinket/trinket:10/QKQ1.200816.002/eng.zouqiao.20250217.185927:userdebug/test-keys";
++volatile sig_atomic_t interrupted=0;
++void Interrupt(int) { interrupted=1; }
++uint64_t Now() { struct timespec t={}; if(clock_gettime(CLOCK_BOOTTIME,&t)) return 0; return uint64_t(t.tv_sec)*1000+t.tv_nsec/1000000; }
++std::string Prop(const char* name) { char v[PROP_VALUE_MAX]={}; __system_property_get(name,v); return v; }
++std::string Trim(std::string s) { while(!s.empty() && (s.back()=='\n'||s.back()=='\r'||s.back()==' ')) s.pop_back(); return s; }
++std::string ReadFile(const std::string& path) { std::ifstream f(path); std::stringstream s; s<<f.rdbuf(); return s.str(); }
++std::string Cmdline(int pid) { std::ifstream f("/proc/"+std::to_string(pid)+"/cmdline"); std::string n; std::getline(f,n,'\0'); return n; }
++std::string Hash(const char* path) {
++ int fd=open(path,O_RDONLY|O_CLOEXEC|O_NOFOLLOW); if(fd<0) return {};
++ SHA256_CTX ctx; SHA256_Init(&ctx); char buf[16384]; ssize_t n;
++ while((n=read(fd,buf,sizeof(buf)))>0) SHA256_Update(&ctx,buf,n);
++ close(fd); if(n<0) return {}; unsigned char digest[SHA256_DIGEST_LENGTH]; SHA256_Final(digest,&ctx);
++ char hex[65]={}; for(unsigned i=0;i<32;++i) std::snprintf(hex+2*i,3,"%02x",digest[i]); return hex;
++}
++bool SameInode(const char* a,const char* b) { struct stat x={},y={};return stat(a,&x)==0 && stat(b,&y)==0 && x.st_dev==y.st_dev && x.st_ino==y.st_ino; }
++struct Result { bool ok=false; std::string output; };
++Result Run(const std::vector<std::string>& args,uint64_t limit_ms=3000) {
++ Result r; int p[2]; if(args.empty()||pipe2(p,O_CLOEXEC)) return r;
++ posix_spawn_file_actions_t acts; if(posix_spawn_file_actions_init(&acts)) {close(p[0]);close(p[1]);return r;}
++ int e=posix_spawn_file_actions_addclose(&acts,p[0]);
++ e|=posix_spawn_file_actions_addopen(&acts,STDIN_FILENO,"/dev/null",O_RDONLY,0);
++ e|=posix_spawn_file_actions_adddup2(&acts,p[1],1);e|=posix_spawn_file_actions_adddup2(&acts,p[1],2);e|=posix_spawn_file_actions_addclose(&acts,p[1]);
++ std::vector<char*> argv;for(const auto& a:args)argv.push_back(const_cast<char*>(a.c_str()));argv.push_back(nullptr);
++ pid_t child=-1;if(!e)e=posix_spawn(&child,argv[0],&acts,nullptr,argv.data(),environ);
++ posix_spawn_file_actions_destroy(&acts);close(p[1]);if(e){close(p[0]);return r;}
++ fcntl(p[0],F_SETFL,O_NONBLOCK);const uint64_t deadline=Now()+limit_ms;int status=0;bool exited=false,eof=false,bad=false;
++ while(!bad) {
++  char b[8192];ssize_t n;while((n=read(p[0],b,sizeof(b)))>0){r.output.append(b,n);if(r.output.size()>1024*1024){bad=true;break;}}
++  if(n==0)eof=true;if(n<0&&errno!=EAGAIN&&errno!=EINTR)bad=true;
++  if(!exited){pid_t w=waitpid(child,&status,WNOHANG);if(w==child)exited=true;else if(w<0&&errno!=EINTR){exited=true;bad=true;}}
++  if(exited&&eof)break;if(Now()>=deadline){bad=true;break;}struct pollfd q={p[0],POLLIN,0};poll(&q,1,20);
++ }
++ close(p[0]);if(!exited){kill(child,SIGKILL);waitpid(child,&status,0);}
++ r.ok=!bad&&exited&&WIFEXITED(status)&&WEXITSTATUS(status)==0;return r;
++}
++std::vector<int> Processes(const std::string& name) {
++ std::vector<int> p;DIR* d=opendir("/proc");if(!d)return {-1};struct dirent* entry;
++ while((entry=readdir(d))) {char* end=nullptr;long pid=strtol(entry->d_name,&end,10);if(!end||*end||pid<=0)continue;if(Cmdline(pid)==name)p.push_back(pid);}
++ closedir(d);return p;
++}
++bool OriginalGone(dev_t dev,ino_t ino) {
++ DIR* d=opendir("/proc");if(!d)return false;bool gone=true;struct dirent* entry;
++ while((entry=readdir(d))) {char* end=nullptr;long pid=strtol(entry->d_name,&end,10);if(!end||*end||pid<=0)continue;
++  struct stat s={};std::string file="/proc/"+std::to_string(pid)+"/exe";
++  if(stat(file.c_str(),&s)==0){if(s.st_dev==dev&&s.st_ino==ino)gone=false;}else if(errno!=ENOENT&&errno!=ESRCH)gone=false;
++ }
++ closedir(d);return gone;
++}
++bool MaskVisibleInAllExistingNamespaces() {
++ DIR* d=opendir("/proc");if(!d)return false;bool ok=true;struct dirent* entry;
++ while((entry=readdir(d))) {char* end=nullptr;long pid=strtol(entry->d_name,&end,10);if(!end||*end||pid<=0)continue;
++  const std::string path="/proc/"+std::to_string(pid)+"/root/system/bin/blink";struct stat s={};
++  if(stat(path.c_str(),&s)==0){if(!SameInode(path.c_str(),kHold))ok=false;}else if(errno!=ENOENT&&errno!=ESRCH)ok=false;
++ }
++ closedir(d);return ok;
++}
++template<class F> bool Wait(F predicate,uint64_t ms) {uint64_t until=Now()+ms;do {if(predicate())return true;usleep(100000);}while(Now()<until);return false;}
++struct Journal {unsigned long long dev=0,ino=0;int parent=0;std::string old_on,old_ble,data_sha;int hal=-1,mcu=-1;bool armed=false,data_restored=false;};
++bool LoadJournal(Journal* j) {
++ int fd=open(kJournal,O_RDONLY|O_CLOEXEC|O_NOFOLLOW);if(fd<0)return false;struct stat s={};char b[1024]={};
++ bool ok=fstat(fd,&s)==0&&s.st_uid==0&&(s.st_mode&0777)==0600&&S_ISREG(s.st_mode);ssize_t n=read(fd,b,sizeof(b)-1);close(fd);
++ char on[8]={},ble[8]={};const int fields=sscanf(b,"%llu %llu %d %7s %7s",&j->dev,&j->ino,&j->parent,on,ble);j->old_on=on;j->old_ble=ble;
++ const std::string text(b,n>0?n:0);size_t hash=text.find("DATA_SHA=");if(hash!=std::string::npos)j->data_sha=text.substr(hash+9,64);j->armed=text.find("ARMED\n")!=std::string::npos;j->data_restored=text.find("DATA_RESTORED\n")!=std::string::npos;
++ size_t hp=text.find("HAL_PID=");if(hp!=std::string::npos)j->hal=atoi(text.c_str()+hp+8);
++ size_t mp=text.find("MCU_PID=");if(mp!=std::string::npos)j->mcu=atoi(text.c_str()+mp+8);
++ return ok&&n>0&&fields>=3;
++}
++bool AppendJournal(const std::string& text) {int fd=open(kJournal,O_WRONLY|O_APPEND|O_NOFOLLOW|O_CLOEXEC);if(fd<0)return false;bool ok=write(fd,text.data(),text.size())==static_cast<ssize_t>(text.size())&&fsync(fd)==0;close(fd);return ok;}
++bool Barrier(const Journal& j) {return SameInode(kBlink,kHold)&&Hash(kHold)==NGD12_HOLD_SHA&&MaskVisibleInAllExistingNamespaces()&&OriginalGone(j.dev,j.ino);}
++ngd::HciProbeResult RootProbe(int pid,bool admitted,const Journal& j) {
++ // This explicit override is root-only, after the executable maintenance barrier.
++ return ngd::ProbeHciForProcess(pid,admitted,Barrier(j));
++}
++bool CloseInternal() {
++ Journal j;if(geteuid()!=0||!LoadJournal(&j)||getppid()!=j.parent||!Barrier(j)||!Processes(kProcess).empty())return false;
++ const auto p=RootProbe(-1,false,j);if(p.occupancy!=ngd::HciOccupancy::NoForeignClientObserved)return false;
++ using android::hardware::bluetooth::V1_0::IBluetoothHci;
++ const auto service=IBluetoothHci::getService("default");if(!service)return false;
++ const auto returned=service->close();return returned.isOk(); // Declared HIDL API, no guessed C++ slots.
++}
++bool RecoveryReceipt(const char* path) {
++ int fd=open(path,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);if(fd<0)return false;struct stat s={};char b[4096]={};
++ bool ok=fstat(fd,&s)==0&&s.st_uid==0&&(s.st_mode&0777)==0600&&S_ISREG(s.st_mode)&&s.st_size<4096;
++ ssize_t n=read(fd,b,sizeof(b)-1);close(fd);std::string text(b,n>0?n:0);
++ const std::string prefix="SNAPSHOT_SHA=";
++ size_t pos=text.find(prefix);if(pos==std::string::npos)return false;
++ const std::string sha=text.substr(pos+prefix.size(),64);
++ return ok&&sha.size()==64&&Hash("/data/local/tmp/ngd14-btdata.snapshot")==sha&&
++  text.find(std::string("FINGERPRINT=")+kFingerprint+"\n")!=std::string::npos&&
++  text.find("METHOD=DATA_APP_SYSTEM_UPDATE_FACTORY_ROLLBACK\n")!=std::string::npos&&
++  text.find("BOOT_ID="+Trim(ReadFile("/proc/sys/kernel/random/boot_id"))+"\n")!=std::string::npos&&
++  Hash("/system/app/BluetoothExt/BluetoothExt.apk")=="554671c357f5c81fbc4deec68dc60801a7b1e840722db328c1d1748e5b38033c";
++
++}
++bool UsbConnected() {
++ DIR* d=opendir("/sys/class/udc");if(!d)return Trim(ReadFile("/sys/class/android_usb/android0/state"))=="CONFIGURED";bool configured=false;struct dirent* e;
++ while((e=readdir(d))){if(e->d_name[0]=='.')continue;std::string state=Trim(ReadFile(std::string("/sys/class/udc/")+e->d_name+"/state"));if(state=="configured")configured=true;}
++ closedir(d);return configured||Trim(ReadFile("/sys/class/android_usb/android0/state"))=="CONFIGURED";
++}
++bool PermissionBaseline(const char* mode) {
++ if(Hash("/data/local/tmp/ngd14_permissions.jar")!="b953d37127c61797a364a60f34b608cfccfe8efe4759cb72f2a7e299ce863557")return false;
++ return Run({"/system/bin/env","CLASSPATH=/data/local/tmp/ngd14_permissions.jar","/system/bin/app_process","/system/bin","Ngd14Permissions",mode},7000).ok;
++}
++bool RestoreFactoryUpdate() {
++ auto path=Run({"/system/bin/pm","path","org.codeaurora.bluetooth"});
++ if(!path.ok)return false;
++ if(Trim(path.output).find("package:/data/app/")==0) {
++  if(Hash(Trim(path.output).substr(8).c_str())!=NGD12_APK_SHA)return false;
++  if(!PermissionBaseline("assert-no-share-grant"))return false;
++  // No --user: DELETE_ALL_USERS for an UPDATED_SYSTEM_APP reverts its factory version.
++  auto removed=Run({"/system/bin/pm","uninstall","-k","org.codeaurora.bluetooth"},15000);
++  if(!removed.ok||removed.output.find("Success")==std::string::npos)return false;
++ }
++ auto current=Run({"/system/bin/pm","path","org.codeaurora.bluetooth"});
++ if(!current.ok||Trim(current.output)!="package:/system/app/BluetoothExt/BluetoothExt.apk")return false;
++ if(Hash("/system/app/BluetoothExt/BluetoothExt.apk")!="554671c357f5c81fbc4deec68dc60801a7b1e840722db328c1d1748e5b38033c")return false;
++ return Run({"/system/bin/pm","default-state","--user","0","org.codeaurora.bluetooth"}).ok&&PermissionBaseline("restore");
++}
++bool CaptureBaseline(const char* receipt) {
++ if(geteuid()!=0||Prop("ro.build.fingerprint")!=kFingerprint||Prop("init.svc.blink")!="running")return false;
++ auto p=Run({"/system/bin/pm","path","org.codeaurora.bluetooth"});
++ if(!p.ok||Trim(p.output)!="package:/system/app/BluetoothExt/BluetoothExt.apk"||!Processes(kProcess).empty())return false;
++ if(Trim(Run({"/system/bin/settings","get","global","bluetooth_on"}).output)!="0")return false;
++ auto users=Run({"/system/bin/pm","list","users"});auto up=users.output.find("UserInfo{");
++ if(!users.ok||up==std::string::npos||users.output.find("UserInfo{0:")==std::string::npos||users.output.find("UserInfo{",up+1)!=std::string::npos)return false;
++ auto pkg=Run({"/system/bin/dumpsys","package","org.codeaurora.bluetooth"});
++ if(!pkg.ok||pkg.output.find("userId=1002")==std::string::npos||pkg.output.find("enabled=0")==std::string::npos)return false;
++
++ ngd12::DataSnapshot data({"/data/misc/bluedroid","/data/misc/bluetooth","/data/user/0/org.codeaurora.bluetooth","/data/user_de/0/org.codeaurora.bluetooth"});
++ if(!PermissionBaseline("capture")||!data.Capture()||!data.SaveExclusive("/data/local/tmp/ngd14-btdata.snapshot"))return false;
++ std::string text=std::string("METHOD=DATA_APP_SYSTEM_UPDATE_FACTORY_ROLLBACK\nFINGERPRINT=")+kFingerprint+"\nBOOT_ID="+Trim(ReadFile("/proc/sys/kernel/random/boot_id"))+"\nSNAPSHOT_SHA="+Hash("/data/local/tmp/ngd14-btdata.snapshot")+"\n";
++ int fd=open(receipt,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);if(fd<0)return false;
++ bool ok=write(fd,text.data(),text.size())==static_cast<ssize_t>(text.size())&&fsync(fd)==0;close(fd);
++ printf("NGD14_BASELINE nodes=%zu saved=%d; no HCI/BLINK changes\n",data.Count(),ok);return ok&&RecoveryReceipt(receipt);
++}
++bool RollbackUpdateOnly(const char* receipt) {
++ if(geteuid()!=0||!RecoveryReceipt(receipt)||!Processes(kProcess).empty()||
++    Prop("init.svc.blink")!="running"||Hash(kBlink)!=kFactorySha||
++    ReadFile("/proc/net/unix").find(ngd12::kSocketName)!=std::string::npos)return false;
++ bool factory=RestoreFactoryUpdate();
++ ngd12::DataSnapshot data({"/data/misc/bluedroid","/data/misc/bluetooth","/data/user/0/org.codeaurora.bluetooth","/data/user_de/0/org.codeaurora.bluetooth"});
++ bool restored=data.LoadVerified("/data/local/tmp/ngd14-btdata.snapshot")&&data.RestoreOnly({"/data/user/0/org.codeaurora.bluetooth","/data/user_de/0/org.codeaurora.bluetooth"});
++ return factory&&restored;
++}
++class Runtime final : public ngd12::Operations {
++ public:
++  Runtime(std::string self,std::string receipt):self_(self),receipt_(receipt),deadline_(Now()+60000){}
++  std::atomic<bool> armed{false},abort{false},serving{true};std::atomic<int> admitted_pid{-1};
++  Journal journal;int initial_hal=-1;
++  uint64_t deadline()const{return deadline_;}
++  bool Do(ngd12::Action action) override {
++   if(action==ngd12::Action::Disarm)restoring_=true;
++   bool ok=(restoring_||(!abort.load()&&!interrupted))&&Execute(action);std::printf("NGD14 %llu %s %s\n",static_cast<unsigned long long>(Now()),ngd12::ActionName(action),ok?"PASS":"FAIL");std::fflush(stdout);return ok;
++  }
++  bool Execute(ngd12::Action a) {
++   using A=ngd12::Action;
++   switch(a) {
++    case A::Preflight: {
++     if(preflight_done_)return true;
++     if(geteuid()!=0||!RecoveryReceipt(receipt_.c_str())||Prop("ro.build.fingerprint")!=kFingerprint||Prop("ro.build.version.sdk")!="29"||Trim(ReadFile("/sys/fs/selinux/enforce"))!="0"||!UsbConnected())return false;
++     if(!SameInode("/proc/self/ns/mnt","/proc/1/ns/mnt")){int ns=open("/proc/1/ns/mnt",O_RDONLY|O_CLOEXEC);if(ns<0)return false;int ret=setns(ns,CLONE_NEWNS);close(ns);if(ret)return false;}
++     if(Hash("/system/lib64/libbluetooth_qti.so")!="bde378e8fd1cde351a340dc4e75200512726bdce9a02dd2d1218bf17c75a9be6"||Hash(kBlink)!=kFactorySha||Hash(kHold)!=NGD12_HOLD_SHA)return false;
++     auto pkg=Run({"/system/bin/dumpsys","package","org.codeaurora.bluetooth"});if(!pkg.ok||pkg.output.find("userId=1002")==std::string::npos||pkg.output.find("UPDATED_SYSTEM_APP")==std::string::npos||pkg.output.find("codePath=/data/app/")==std::string::npos)return false;
++     auto path=Run({"/system/bin/pm","path","org.codeaurora.bluetooth"});auto apk=Trim(path.output);
++     if(!path.ok||apk.find("package:/data/app/")!=0||apk.find('\n')!=std::string::npos||Hash(apk.substr(8).c_str())!=NGD12_APK_SHA)return false;
++     auto mcu=Processes("com.carocean.mcuserver");if(mcu.size()!=1)return false;initial_mcu_=mcu[0];
++     if(ReadFile("/proc/"+std::to_string(initial_mcu_)+"/cgroup").find("/uid_1000/pid_")==std::string::npos)return false;
++     if(Hash("/data/local/tmp/ngd14_permissions.jar")!="b953d37127c61797a364a60f34b608cfccfe8efe4759cb72f2a7e299ce863557"||!data_.LoadVerified("/data/local/tmp/ngd14-btdata.snapshot"))return false;data_saved_=true;
++     if(Prop("init.svc.blink")!="running")return false;
++     old_on_=Trim(Run({"/system/bin/settings","get","global","bluetooth_on"}).output);
++     old_ble_=Trim(Run({"/system/bin/settings","get","global","ble_scan_always_enabled"}).output);
++     if(old_on_!="0"||(old_ble_!="0"&&old_ble_!="1"&&old_ble_!="null"))return false;
++     auto p=ngd::ProbeHci(false);if(!p.snapshot.valid)return false;initial_hal=p.snapshot.server_pid;
++     struct stat s={};if(stat(kBlink,&s))return false;journal.dev=s.st_dev;journal.ino=s.st_ino;journal.parent=getpid();journal.old_on=old_on_;journal.old_ble=old_ble_;
++     preflight_done_=Now()<deadline_;return preflight_done_;
++    }
++    case A::MaskBlink: {
++     int fd=open(kJournal,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);if(fd<0)return false;
++     char text[128];int n=snprintf(text,sizeof(text),"%llu %llu %d %s %s\n",journal.dev,journal.ino,journal.parent,old_on_.c_str(),old_ble_.c_str());
++     bool ok=write(fd,text,n)==n&&fsync(fd)==0;close(fd);journal_owned_=true;if(!ok||!AppendJournal("HAL_PID="+std::to_string(initial_hal)+"\nMCU_PID="+std::to_string(initial_mcu_)+"\n"))return false;
++     if(mount(kHold,kBlink,nullptr,MS_BIND,nullptr))return false;masked_=true;
++     // Verify that init observes the overmount; never change init.rc on disk.
++     return SameInode("/proc/1/root/system/bin/blink",kHold)&&MaskVisibleInAllExistingNamespaces();
++    }
++    case A::DisableNgd: {
++     Run({"/system/bin/svc","bluetooth","disable"});
++     return Run({"/system/bin/am","force-stop","--user","0","org.codeaurora.bluetooth"}).ok&&Run({"/system/bin/pm","disable-user","--user","0","org.codeaurora.bluetooth"}).ok;
++    }
++    case A::BleScanOff:return Run({"/system/bin/settings","put","global","ble_scan_always_enabled","0"}).ok;
++    case A::StopBlink:return Run({"/system/bin/setprop","ctl.stop","blink"}).ok&&Wait([&]{return Prop("init.svc.blink")=="stopped";},3000);
++    case A::OriginalBlinkGone:return Wait([&]{return Barrier(journal);},3000);
++    case A::CloseHci:return Run({self_,"--internal-close-hci"},3000).ok;
++    case A::HciFree:{auto p=RootProbe(-1,false,journal);return p.snapshot.valid&&p.snapshot.server_pid==initial_hal&&p.occupancy==ngd::HciOccupancy::NoForeignClientObserved;}
++    case A::SnapshotData:{journal.data_sha=Hash("/data/local/tmp/ngd14-btdata.snapshot");return data_saved_&&journal.data_sha.size()==64&&AppendJournal("DATA_SHA="+journal.data_sha+"\n");}
++    case A::Arm:if(Now()+5000>=deadline_||abort.load()||interrupted||!AppendJournal("ARMED\n"))return false;journal.armed=true;armed=true;return true;
++    case A::EnableNgd: return Run({"/system/bin/pm","enable","--user","0","org.codeaurora.bluetooth"}).ok&&Run({"/system/bin/svc","bluetooth","enable"}).ok;
++    case A::WaitAndroidOn:return Wait([&]{auto s=Run({"/system/bin/dumpsys","bluetooth_manager"},2000);return s.ok&&s.output.find("state: ON")!=std::string::npos&&admitted_pid.load()>0&&!abort.load();},10000);
++    case A::Disarm:armed=false;return true;
++    case A::NgdGone:return Wait([&]{return Processes(kProcess).empty();},4000);
++    case A::RestoreData:{bool factory=RestoreFactoryUpdate();bool data=!data_saved_||(journal.armed?data_.Restore():data_.RestoreOnly({"/data/user/0/org.codeaurora.bluetooth","/data/user_de/0/org.codeaurora.bluetooth"}));if(data&&!AppendJournal("DATA_RESTORED\n"))data=false;return factory&&data;}
++    case A::UnmaskBlink:{
++     if(masked_){
++      if(!SameInode(kBlink,kHold))return false;
++      // Before handoff, unmask the pathname without interrupting a live OEM worker.
++      if(OriginalGone(journal.dev,journal.ino)&&(!Run({"/system/bin/setprop","ctl.stop","blink"}).ok||!Wait([&]{return Prop("init.svc.blink")=="stopped";},3000)))return false;
++      if(umount2(kBlink,0))return false;masked_=false;
++     }
++     if(Hash(kBlink)!=kFactorySha)return false;
++     return true; // Keep the journal until settings and actual OEM HCI ownership are restored.
++    }
++    case A::RestoreSettings:{
++     bool ok=Run({"/system/bin/settings","put","global","bluetooth_on",old_on_}).ok;
++     if(old_ble_=="null")ok=Run({"/system/bin/settings","delete","global","ble_scan_always_enabled"}).ok&&ok;
++     else ok=Run({"/system/bin/settings","put","global","ble_scan_always_enabled",old_ble_}).ok&&ok;
++     return ok;
++    }
++    case A::StartBlink:return Run({"/system/bin/setprop","ctl.start","blink"}).ok;
++    case A::OemOwner:return Wait([&]{if(Prop("init.svc.blink")!="running"||Cmdline(initial_mcu_)!="com.carocean.mcuserver")return false;auto p=ngd::ProbeHci(false);if(!p.snapshot.valid||p.snapshot.server_pid!=initial_hal)return false;for(int pid:p.snapshot.clients)if(Cmdline(pid)==kBlink)return true;return false;},30000);
++   }
++   return false;
++  }
++  void Serve(int listener) {
++   while(serving.load()) {
++    if(armed.load()&&!UsbConnected()){abort=true;armed=false;}
++    struct pollfd q={listener,POLLIN,0};if(poll(&q,1,100)<=0)continue;
++    int fd=accept4(listener,nullptr,nullptr,SOCK_CLOEXEC);if(fd<0)continue;
++    struct timeval tv={3,0};setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&tv,sizeof(tv));
++    struct ucred peer={};socklen_t size=sizeof(peer);char request[32]={};
++    bool credentials=getsockopt(fd,SOL_SOCKET,SO_PEERCRED,&peer,&size)==0;
++    ssize_t n=credentials?recv(fd,request,sizeof(request)-1,0):-1;
++    if(n>0&&peer.uid==0&&std::strcmp(request,"RESTORE")==0){abort=true;send(fd,"RESTORING",9,MSG_NOSIGNAL);close(fd);continue;}
++    bool valid=n>0&&peer.uid==1002&&Cmdline(peer.pid)==kProcess&&armed.load()&&Now()<deadline_&&UsbConnected()&&Cmdline(initial_mcu_)=="com.carocean.mcuserver"&&Barrier(journal);
++    bool admitting=std::strcmp(request,"ADMIT")==0;bool checking=std::strcmp(request,"CHECK")==0;
++    int admitted=admitted_pid.load();valid=valid&&(admitting||checking)&&(admitted<0?admitting:admitted==peer.pid);
++    if(valid){auto p=RootProbe(peer.pid,admitted==peer.pid,journal);valid=p.snapshot.valid&&p.snapshot.server_pid==initial_hal&&p.occupancy==ngd::HciOccupancy::NoForeignClientObserved;}
++    valid=valid&&armed.load()&&Now()<deadline_;
++    if(valid){admitted_pid=peer.pid;char response[80];snprintf(response,sizeof(response),"NGD12_OK %llu",static_cast<unsigned long long>(deadline_));send(fd,response,strlen(response),MSG_NOSIGNAL);}
++    else {send(fd,"DENY",4,MSG_NOSIGNAL);if(armed.load()&&credentials&&peer.uid==1002)abort=true;}
++    close(fd);
++   }
++  }
++ private:
++  std::string self_,receipt_,old_on_,old_ble_;uint64_t deadline_;int initial_mcu_=-1;bool restoring_=false,masked_=false,journal_owned_=false,preflight_done_=false,data_saved_=false;
++  ngd12::DataSnapshot data_{std::vector<std::string>{"/data/misc/bluedroid","/data/misc/bluetooth","/data/user/0/org.codeaurora.bluetooth","/data/user_de/0/org.codeaurora.bluetooth"}};
++};
++int Listener() {
++ int fd=socket(AF_UNIX,SOCK_SEQPACKET|SOCK_CLOEXEC,0);if(fd<0)return -1;struct sockaddr_un a={};a.sun_family=AF_UNIX;
++ memcpy(a.sun_path+1,ngd12::kSocketName,strlen(ngd12::kSocketName));
++ if(bind(fd,reinterpret_cast<sockaddr*>(&a),offsetof(sockaddr_un,sun_path)+1+strlen(ngd12::kSocketName))||listen(fd,8)){close(fd);return -1;}return fd;
++}
++bool RecoveryCloseInternal() {
++ Journal j;if(geteuid()!=0||!LoadJournal(&j)||getppid()!=j.parent||
++  !SameInode(("/proc/"+std::to_string(getppid())+"/exe").c_str(),"/proc/self/exe")||
++  Prop("init.svc.blink")!="stopped"||!OriginalGone(j.dev,j.ino)||!Processes(kProcess).empty())return false;
++ auto p=ngd::ProbeHciForProcess(-1,false,true);
++ if(!p.snapshot.valid||p.snapshot.server_pid!=j.hal||p.occupancy!=ngd::HciOccupancy::NoForeignClientObserved)return false;
++ auto hci=android::hardware::bluetooth::V1_0::IBluetoothHci::getService("default");return hci&&hci->close().isOk();
++}
++bool RecoverFromJournal(const char* receipt,const std::string& self) {
++ if(geteuid()!=0||!RecoveryReceipt(receipt)||Prop("ro.build.fingerprint")!=kFingerprint)return false;
++ Journal j;if(!LoadJournal(&j)||j.hal<=0||j.mcu<=0||j.old_on!="0"||
++  (j.old_ble!="0"&&j.old_ble!="1"&&j.old_ble!="null"))return false;
++ if(kill(j.parent,0)==0||errno!=ESRCH)return false;
++ if(!SameInode("/proc/self/ns/mnt","/proc/1/ns/mnt")){int fd=open("/proc/1/ns/mnt",O_RDONLY|O_CLOEXEC);if(fd<0)return false;int e=setns(fd,CLONE_NEWNS);close(fd);if(e)return false;}
++ bool masked=SameInode(kBlink,kHold);
++ if((!masked&&Hash(kBlink)!=kFactorySha)||Hash(kHold)!=NGD12_HOLD_SHA)return false;
++ // Disarm is implicit: the old broker is dead; no other broker may be present.
++ if(ReadFile("/proc/net/unix").find(ngd12::kSocketName)!=std::string::npos)return false;
++ Run({"/system/bin/svc","bluetooth","disable"});
++ Run({"/system/bin/am","force-stop","--user","0","org.codeaurora.bluetooth"});
++ Run({"/system/bin/pm","disable-user","--user","0","org.codeaurora.bluetooth"});
++ if(!Wait([&]{return Processes(kProcess).empty();},4000))return false;
++ const bool original_gone=OriginalGone(j.dev,j.ino);
++ if(!original_gone) {
++  // Do not close an HCI which is already owned by a live OEM process.
++  auto p=ngd::ProbeHci(false);if(!p.snapshot.valid||p.snapshot.server_pid!=j.hal)return false;
++  bool oem=false;
++  for(int pid:p.snapshot.clients){
++   if(Cmdline(pid)=="/system/bin/hwservicemanager")continue;
++   struct stat st={};if(stat(("/proc/"+std::to_string(pid)+"/exe").c_str(),&st)||
++    static_cast<unsigned long long>(st.st_dev)!=j.dev||static_cast<unsigned long long>(st.st_ino)!=j.ino)return false;
++   oem=true;
++  }
++  if(!oem)return false;
++ }
++ std::string record=std::to_string(j.dev)+" "+std::to_string(j.ino)+" "+std::to_string(getpid())+" "+j.old_on+" "+j.old_ble+"\nHAL_PID="+std::to_string(j.hal)+"\nMCU_PID="+std::to_string(j.mcu)+"\n";
++ if(j.armed)record+="ARMED\n";if(j.data_restored)record+="DATA_RESTORED\n";
++ std::string next=std::string(kJournal)+".recover."+std::to_string(getpid());
++ int fd=open(next.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);if(fd<0)return false;
++ bool ok=write(fd,record.data(),record.size())==static_cast<ssize_t>(record.size())&&fsync(fd)==0;close(fd);if(!ok||rename(next.c_str(),kJournal))return false;
++ if(original_gone) {
++  if(!Run({"/system/bin/setprop","ctl.stop","blink"}).ok||!Wait([&]{return Prop("init.svc.blink")=="stopped";},3000))return false;
++  if(!Run({self,"--recovery-close-hci"},3000).ok)return false;
++  auto p=ngd::ProbeHciForProcess(-1,false,true);
++  if(!p.snapshot.valid||p.snapshot.server_pid!=j.hal||p.occupancy!=ngd::HciOccupancy::NoForeignClientObserved)return false;
++ }
++ bool factory_restored=RestoreFactoryUpdate();
++ ngd12::DataSnapshot data({"/data/misc/bluedroid","/data/misc/bluetooth","/data/user/0/org.codeaurora.bluetooth","/data/user_de/0/org.codeaurora.bluetooth"});
++ bool data_ok=data.LoadVerified("/data/local/tmp/ngd14-btdata.snapshot");
++ if(data_ok)data_ok=(j.armed&&original_gone)?data.Restore():data.RestoreOnly({"/data/user/0/org.codeaurora.bluetooth","/data/user_de/0/org.codeaurora.bluetooth"});
++ if(j.armed&&!original_gone&&!j.data_restored)data_ok=false;
++ if(masked&&(!SameInode(kBlink,kHold)||umount2(kBlink,0)))return false;
++ if(Hash(kBlink)!=kFactorySha)return false;
++ bool settings=Run({"/system/bin/settings","put","global","bluetooth_on",j.old_on}).ok;
++ if(j.old_ble=="null")settings=Run({"/system/bin/settings","delete","global","ble_scan_always_enabled"}).ok&&settings;
++ else settings=Run({"/system/bin/settings","put","global","ble_scan_always_enabled",j.old_ble}).ok&&settings;
++ bool started=!original_gone||Run({"/system/bin/setprop","ctl.start","blink"}).ok;
++ bool owner=started&&Wait([&]{auto p=ngd::ProbeHci(false);if(!p.snapshot.valid||p.snapshot.server_pid!=j.hal)return false;for(int pid:p.snapshot.clients)if(Cmdline(pid)==kBlink)return true;return false;},30000);
++ bool mcu=Cmdline(j.mcu)=="com.carocean.mcuserver";
++ if(factory_restored&&data_ok&&settings&&owner&&mcu)unlink(kJournal);
++ printf("NGD14_RECOVERY factory=%d data=%d settings=%d OEM_HCI=%d MCU_same=%d\n",factory_restored,data_ok,settings,owner,mcu);
++ return factory_restored&&data_ok&&settings&&owner&&mcu;
++}
++
++bool SafeRecover(const char* receipt,const std::string& self) {
++ struct stat st={};
++ if(lstat(kJournal,&st)==0)return RecoverFromJournal(receipt,self);
++ if(errno!=ENOENT)return false;
++ // No journal means no BLINK mask/stop/admission was reached.
++ auto path=Run({"/system/bin/pm","path","org.codeaurora.bluetooth"});
++ if(path.ok&&Trim(path.output).find("package:/data/app/")==0&&Hash(Trim(path.output).substr(8).c_str())==NGD12_APK_SHA)
++  Run({"/system/bin/am","force-stop","--user","0","org.codeaurora.bluetooth"});
++ return RollbackUpdateOnly(receipt);
++}
++
++} // namespace
++int main(int argc,char** argv) {
++ if(argc==3&&strcmp(argv[1],"--capture-oem")==0)return CaptureBaseline(argv[2])?0:79;
++ if(argc==4&&!strcmp(argv[1],"--rollback-update")&&!strcmp(argv[2],"--recovery-receipt"))return RollbackUpdateOnly(argv[3])?0:90;
++ if(argc==2&&strcmp(argv[1],"--restore-now")==0)return ngd12::RequestRootRestore()?0:20;
++ if(argc==2&&!strcmp(argv[1],"--recovery-close-hci"))return RecoveryCloseInternal()?0:30;
++ if(argc==2&&strcmp(argv[1],"--internal-close-hci")==0)return CloseInternal()?0:30;
++ if(argc==4&&strcmp(argv[1],"--recover-from-journal")==0&&strcmp(argv[2],"--recovery-receipt")==0) {
++  char self[4096]={};ssize_t n=readlink("/proc/self/exe",self,sizeof(self)-1);if(n<=0)return 70;self[n]=0;
++  return RecoverFromJournal(argv[3],self)?0:90;
++ }
++ if(argc!=4||strcmp(argv[1],"--maintenance-accept-whole-blink-pause")||strcmp(argv[2],"--recovery-receipt")) {
++  fprintf(stderr,"No default actions. Usage: ngd_native_session --maintenance-accept-whole-blink-pause --recovery-receipt ROOT_0600_RECEIPT\n");return 64;
++ }
++ if(geteuid()!=0)return 77;
++ signal(SIGHUP,SIG_IGN);signal(SIGINT,Interrupt);signal(SIGTERM,Interrupt);
++ char self[4096]={};ssize_t n=readlink("/proc/self/exe",self,sizeof(self)-1);if(n<=0)return 70;self[n]=0;
++ if(getenv("NGD14_SESSION_WORKER")==nullptr) {
++  pid_t worker=fork();if(worker<0)return 71;
++  if(worker==0){if(setpgid(0,0))_exit(71);setenv("NGD14_SESSION_WORKER","1",1);execv(self,argv);_exit(72);}
++  if(setpgid(worker,worker)&&getpgid(worker)!=worker){kill(worker,SIGKILL);waitpid(worker,nullptr,0);return 71;}
++  uint64_t until=Now()+120000;int status=0;ngd14::HostHeartbeat heartbeat(Now());
++  fcntl(STDIN_FILENO,F_SETFL,fcntl(STDIN_FILENO,F_GETFL)|O_NONBLOCK);
++  while(Now()<until){
++   char input[128];ssize_t count=read(STDIN_FILENO,input,sizeof(input));
++   if(count==0||(count<0&&errno!=EAGAIN&&errno!=EINTR)||
++    (count>0&&!heartbeat.Feed(input,static_cast<size_t>(count),Now()))||!heartbeat.Alive(Now())) {
++     printf("NGD14_STOP host heartbeat lost; restoring OEM\n");fflush(stdout);break;
++   }
++   pid_t done=waitpid(worker,&status,WNOHANG);if(done==worker){
++    kill(-worker,SIGKILL); // Reap every remaining utility child before any restoration command.
++    if(WIFEXITED(status)&&(WEXITSTATUS(status)==0||WEXITSTATUS(status)==10))return WEXITSTATUS(status);
++    return SafeRecover(argv[3],self)?10:90;
++   }if(done<0)return 90;usleep(100000);}
++  kill(-worker,SIGKILL);waitpid(worker,&status,0);
++  return SafeRecover(argv[3],self)?10:90;
++ }
++ if(!SameInode(("/proc/"+std::to_string(getppid())+"/exe").c_str(),"/proc/self/exe"))return 77;
++ Runtime ops(self,argv[3]);
++ // Entering init's mount namespace must happen before creating threads.
++ if(!ops.Do(ngd12::Action::Preflight))return 78;
++ int listener=Listener();if(listener<0)return 73;
++ std::thread broker([&]{ops.Serve(listener);});
++ ngd12::Transaction transaction(ops);
++ bool prepared=transaction.Prepare();
++ if(prepared)while(Now()<ops.deadline()&&!ops.abort.load()&&!interrupted)usleep(100000);
++ ops.armed=false;
++ bool restored=transaction.Restore();
++ if(restored){Journal completed;if(LoadJournal(&completed)&&completed.parent==getpid()&&unlink(kJournal))restored=false;}
++ ops.serving=false;broker.join();close(listener);
++ printf("NGD14_RESULT prepared=%s oem_process_hci_restored=%s hardware_audio_test=UNVERIFIED\n",prepared?"true":"false",restored?"true":"false");
++ return restored?(prepared?0:10):90;
++}
++#else
++#include <cstdio>
++int main(){std::puts("Android maintenance actions unavailable on this host");return 77;}
++#endif
+--- a/jni/ngd14_session/ngd_native_transaction.cpp
++++ b/jni/ngd14_session/ngd_native_transaction.cpp
+@@ -0,0 +1,43 @@
++#include "ngd_native_session.h"
++namespace ngd12 {
++const char* ActionName(Action a) {
++  switch(a) {
++#define NGD_NAME(x) case Action::x: return #x
++    NGD_NAME(Preflight); NGD_NAME(MaskBlink); NGD_NAME(DisableNgd);
++    NGD_NAME(BleScanOff); NGD_NAME(StopBlink); NGD_NAME(OriginalBlinkGone);
++    NGD_NAME(CloseHci); NGD_NAME(HciFree); NGD_NAME(SnapshotData); NGD_NAME(Arm); NGD_NAME(EnableNgd);
++    NGD_NAME(WaitAndroidOn); NGD_NAME(Disarm); NGD_NAME(NgdGone);
++    NGD_NAME(RestoreData); NGD_NAME(UnmaskBlink); NGD_NAME(RestoreSettings); NGD_NAME(StartBlink); NGD_NAME(OemOwner);
++#undef NGD_NAME
++  }
++  return "Unknown";
++}
++bool Transaction::Prepare() {
++  if (!ops_.Do(Action::Preflight)) return false;
++  touched_ = true; // Even a failed mount may have partially changed runtime state.
++  if (!ops_.Do(Action::MaskBlink)) return false;
++  if (!ops_.Do(Action::DisableNgd) || !ops_.Do(Action::NgdGone) || !ops_.Do(Action::BleScanOff)) return false;
++  oem_stopped_ = true; // Stop request can succeed even if its verification times out.
++  if (!ops_.Do(Action::StopBlink) || !ops_.Do(Action::OriginalBlinkGone) ||
++      !ops_.Do(Action::CloseHci) || !ops_.Do(Action::HciFree) || !ops_.Do(Action::SnapshotData)) return false;
++  ngd_may_own_ = true;
++  if (!ops_.Do(Action::Arm) || !ops_.Do(Action::EnableNgd) ||
++      !ops_.Do(Action::WaitAndroidOn)) return false;
++  return true;
++}
++bool Transaction::Restore() {
++  if (restored_) return true;
++  if (!touched_) { restored_ = true; return true; }
++  // Never expose the OEM executable/start OEM while an NGD owner may remain.
++  if (!ops_.Do(Action::Disarm)) return false;
++  const bool disable_ok = ops_.Do(Action::DisableNgd);
++  if (!disable_ok || !ops_.Do(Action::NgdGone)) return false;
++  if (oem_stopped_ && (!ops_.Do(Action::CloseHci) || !ops_.Do(Action::HciFree))) return false;
++  const bool data_ok = ops_.Do(Action::RestoreData);
++  if (!ops_.Do(Action::UnmaskBlink)) return false;
++  const bool settings_ok = ops_.Do(Action::RestoreSettings);
++  const bool oem_ok = ops_.Do(Action::StartBlink) && ops_.Do(Action::OemOwner);
++  restored_ = data_ok && settings_ok && oem_ok;
++  return restored_;
++}
++}  // namespace ngd12
+--- a/jni/ngd14_session/ngd_native_transaction_test.cpp
++++ b/jni/ngd14_session/ngd_native_transaction_test.cpp
+@@ -0,0 +1,33 @@
++#include "ngd_native_session.h"
++#include <vector>
++#include <cassert>
++#include <algorithm>
++#include <cstdio>
++using ngd12::Action;
++struct Fake final:ngd12::Operations {
++ std::vector<Action> seen;int fail=-1;int count=0;
++ bool Do(Action a)override {seen.push_back(a);return count++!=fail;}
++ size_t Pos(Action a)const {auto p=std::find(seen.begin(),seen.end(),a);return p==seen.end()?seen.size():p-seen.begin();}
++ bool Has(Action a)const{return Pos(a)<seen.size();}
++};
++int main() {
++ Fake success;ngd12::Transaction t(success);assert(t.Prepare());assert(t.Restore());size_t total=success.seen.size();assert(t.Restore()&&success.seen.size()==total);
++ assert(success.Pos(Action::MaskBlink)<success.Pos(Action::StopBlink));assert(success.Pos(Action::CloseHci)<success.Pos(Action::Arm));assert(success.Pos(Action::Arm)<success.Pos(Action::EnableNgd));
++ int prep=0;for(Action a:success.seen){++prep;if(a==Action::WaitAndroidOn)break;}
++ for(int fail=0;fail<prep;++fail){Fake f;f.fail=fail;ngd12::Transaction x(f);assert(!x.Prepare());assert(x.Restore());
++  if(fail==0){assert(!f.Has(Action::MaskBlink));assert(!f.Has(Action::StartBlink));}
++  if(f.Has(Action::EnableNgd)){assert(f.Pos(Action::MaskBlink)<f.Pos(Action::EnableNgd));}
++ }
++ // Inject every restoration failure after successful preparation.
++ const int restore_count=static_cast<int>(success.seen.size())-prep;
++ for(int stage=0;stage<restore_count;++stage){Fake f;ngd12::Transaction x(f);assert(x.Prepare());const size_t start=f.seen.size();f.fail=f.count+stage;assert(!x.Restore());
++  std::vector<Action> restore(f.seen.begin()+start,f.seen.end());
++  auto has=[&](Action a){return std::find(restore.begin(),restore.end(),a)!=restore.end();};
++  if(stage<=4){assert(!has(Action::UnmaskBlink));assert(!has(Action::StartBlink));}
++  if(stage==5){assert(has(Action::UnmaskBlink));assert(has(Action::StartBlink));}
++ }
++ // A settings restoration failure must not prevent a safely released OEM restart.
++ Fake f;ngd12::Transaction x(f);assert(x.Prepare());f.fail=f.count+7;assert(!x.Restore());assert(f.Has(Action::StartBlink));
++ uint64_t deadline=9;assert(!ngd12::QueryRootSession(true,&deadline));assert(deadline==0);assert(!ngd12::RequestRootRestore());
++ puts("PASS: transaction order, every preparation/restore failure, no concurrent owner restoration, host denial, idempotent success");
++}
+--- a/ngd14_tools/Ngd14Permissions.java
++++ b/ngd14_tools/Ngd14Permissions.java
+@@ -0,0 +1,43 @@
++import java.lang.reflect.*;
++import java.io.*;
++import java.util.*;
++import java.nio.file.*;
++import java.nio.file.attribute.*;
++public class Ngd14Permissions {
++ static final String PKG="org.codeaurora.bluetooth", FILE="/data/local/tmp/ngd14-permissions.baseline";
++ public static void main(String[] args) throws Exception {
++  if(args.length!=1)throw new IllegalArgumentException("capture|restore|check");
++  Class<?> sm=Class.forName("android.os.ServiceManager"),api=Class.forName("android.content.pm.IPackageManager");
++  Object binder=sm.getMethod("getService",String.class).invoke(null,"package");
++  Object pm=Class.forName("android.content.pm.IPackageManager$Stub").getMethod("asInterface",Class.forName("android.os.IBinder")).invoke(null,binder);
++  Method get=api.getMethod("getPermissionFlags",String.class,String.class,int.class), check=api.getMethod("checkPermission",String.class,String.class,int.class),update=api.getMethod("updatePermissionFlags",String.class,String.class,int.class,int.class,boolean.class,int.class);
++  int orphan=(Integer)check.invoke(pm,"android.permission.ACCESS_BLUETOOTH_SHARE",PKG,0);
++  if(orphan!=-1)throw new IllegalStateException("STOP: pre-existing ACCESS_BLUETOOTH_SHARE grant; do not revoke blindly");
++  if(args[0].equals("assert-no-share-grant")){System.out.println("SHARE_GRANT_ABSENT");return;}
++  String[] perms;
++  TreeMap<String,int[]> saved=new TreeMap<>();
++  if(args[0].equals("capture")) {
++   Object info=api.getMethod("getPackageInfo",String.class,int.class,int.class).invoke(pm,PKG,4096,0);
++   perms=(String[])info.getClass().getField("requestedPermissions").get(info);
++   for(String perm:perms)saved.put(perm,new int[]{(Integer)get.invoke(pm,perm,PKG,0),(Integer)check.invoke(pm,perm,PKG,0)});
++   Path f=Paths.get(FILE);
++   Set<PosixFilePermission> mode=PosixFilePermissions.fromString("rw-------");
++   try(BufferedWriter w=Files.newBufferedWriter(f,java.nio.charset.StandardCharsets.UTF_8,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)) {
++    Files.setPosixFilePermissions(f,mode);
++    for(Map.Entry<String,int[]> e:saved.entrySet())w.write(e.getKey()+" "+e.getValue()[0]+" "+e.getValue()[1]+"\n");
++   }
++   System.out.println("PERMISSION_BASELINE_SAVED "+saved.size());return;
++  }
++  Path f=Paths.get(FILE);
++  if(Files.isSymbolicLink(f)||!Files.getOwner(f).getName().equals("root")||!Files.getPosixFilePermissions(f).equals(PosixFilePermissions.fromString("rw-------")))throw new IllegalStateException("Unsafe baseline owner/mode");
++  for(String row:Files.readAllLines(f,java.nio.charset.StandardCharsets.UTF_8)){String[] v=row.split(" ");if(v.length!=3||!v[0].matches("[A-Za-z0-9_.]+"))throw new IllegalStateException("Invalid baseline");saved.put(v[0],new int[]{Integer.parseInt(v[1]),Integer.parseInt(v[2])});}
++  int changed=0;
++  for(Map.Entry<String,int[]> e:saved.entrySet()) {
++   String perm=e.getKey();int flags=(Integer)get.invoke(pm,perm,PKG,0),wanted=e.getValue()[0],diff=flags^wanted;
++   if(diff!=0&&args[0].equals("restore")){update.invoke(pm,perm,PKG,diff,wanted,false,0);++changed;}
++   int actual=(Integer)get.invoke(pm,perm,PKG,0),grant=(Integer)check.invoke(pm,perm,PKG,0);
++   if(actual!=wanted||grant!=e.getValue()[1])throw new IllegalStateException("Permission differs: "+perm+" flags="+actual+" expected="+wanted+" grant="+grant+" expected="+e.getValue()[1]);
++  }
++  System.out.println("PERMISSION_BASELINE_MATCH count="+saved.size()+" flags_restored="+changed+" orphan_grant_absent=true");
++ }
++}
+--- a/src/com/android/bluetooth/opp/Constants.java
++++ b/src/com/android/bluetooth/opp/Constants.java
+@@ -159,7 +159,7 @@
+     /** the intent that gets sent when clicking a incoming file confirm notification */
+     static final String ACTION_INCOMING_FILE_CONFIRM = "android.btopp.intent.action.CONFIRM";
+ 
+-    static final String THIS_PACKAGE_NAME = "com.android.bluetooth";
++    static final String THIS_PACKAGE_NAME = "org.codeaurora.bluetooth";
+ 
+     /** The column that is used to remember whether the media scanner was invoked */
+     static final String MEDIA_SCANNED = "scanned";
+--- a/src/com/android/bluetooth/pbap/BluetoothPbapService.java
++++ b/src/com/android/bluetooth/pbap/BluetoothPbapService.java
+@@ -111,7 +111,7 @@
+      */
+     static final String EXTRA_SESSION_KEY = "com.android.bluetooth.pbap.sessionkey";
+     static final String EXTRA_DEVICE = "com.android.bluetooth.pbap.device";
+-    static final String THIS_PACKAGE_NAME = "com.android.bluetooth";
++    static final String THIS_PACKAGE_NAME = "org.codeaurora.bluetooth";
+ 
+     static final int MSG_ACQUIRE_WAKE_LOCK = 5004;
+     static final int MSG_RELEASE_WAKE_LOCK = 5005;

@@ -1,0 +1,46 @@
+{
+  "id": "blink6125-qti-20250217-arm64-a",
+  "fingerprint": "qti/trinket/trinket:10/QKQ1.200816.002/eng.zouqiao.20250217.185927:userdebug/test-keys",
+  "sdk": "29",
+  "abi": "arm64-v8a",
+  "slot": "_a",
+  "selinux": "Permissive",
+  "verified_boot": "orange",
+  "package": "org.codeaurora.bluetooth",
+  "shared_uid": "android.uid.bluetooth",
+  "uid": 1002,
+  "root_block": "/dev/block/dm-3",
+  "ext4_reserved_clusters": "4096",
+  "certificate_sha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+  "factory_files": {
+    "/system/app/BluetoothExt/BluetoothExt.apk": "554671c357f5c81fbc4deec68dc60801a7b1e840722db328c1d1748e5b38033c",
+    "/system/bin/blink": "e2ac7bf449db522d53d8c3c54769802541e92a4d4935bbe46482e93387374a7c",
+    "/system/lib64/libbluetooth_qti.so": "bde378e8fd1cde351a340dc4e75200512726bdce9a02dd2d1218bf17c75a9be6",
+    "/product/priv-app/Settings/Settings.apk": "46ea77f8832d248d9c0ed695016d2ecd56caf994fd31946f845d3cc94aec95e6",
+    "/vendor/bin/hw/android.hardware.bluetooth@1.0-service-qti": "90096bf1e595e11f8722ab8f3fa6d6d9dc05f764a9abbab3a6d84ac76bb3ea78",
+    "/vendor/etc/init/android.hardware.bluetooth@1.0-service-qti.rc": "86b0cf7fe04b1f415773ef410d627f14482a7826945c38ecfe0450dd569edb8c",
+    "/vendor/lib64/hw/android.hardware.bluetooth@1.0-impl-qti.so": "7ed8e2128fe748d272f4667af28a1fc84085de17c42c1b5d2775fa0489adb9b3",
+    "/vendor/lib64/hw/android.hardware.bluetooth.audio@2.0-impl.so": "fd948e5e93f97ec78511552b7b2ef05b25e005fc88d6d6489845f75e6d198206",
+    "/vendor/lib64/hw/audio.bluetooth_qti.default.so": "722059964fad300079b485d74935b46060b4bbb6f2a1c404d1579485b779c5f7",
+    "/vendor/etc/audio_policy_configuration.xml": "80204c1a3fa3c0f95e900f125595d7b290c35c4b9f640296fc4313d1a64fead3",
+    "/vendor/etc/bluetooth_qti_audio_policy_configuration.xml": "a768e46649ae7e6f570c1e357cdc9e0266b525d086b97eca5c8b0e614971f6c4",
+    "/vendor/etc/a2dp_audio_policy_configuration.xml": "e20164e2412fa4b6497a908b2304dd8fe19684925fbae38ed6461ad60f3a9ec2"
+  },
+  "baseline_audio": {
+    "persist.bluetooth.a2dp_offload.disabled": "true",
+    "persist.vendor.bt.a2dp.hal.implementation": ""
+  },
+  "install_audio": {
+    "persist.bluetooth.a2dp_offload.disabled": "false",
+    "persist.vendor.bt.a2dp.hal.implementation": "true"
+  },
+  "hardware_evidence": {
+    "units_tested": 1,
+    "audi_audio_sbc": true,
+    "xbox_hid_and_audio_simultaneous": true,
+    "ignition_cycle_autoconnect_hid": true,
+    "user_observed_audi_connect_seconds": 30,
+    "evidence_type": "User-confirmed ignition cycle; cold boot versus suspend was not inspected after the last report",
+    "redistributable_installer_hardware_tested": false
+  }
+}

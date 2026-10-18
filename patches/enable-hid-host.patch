@@ -1,0 +1,12 @@
+--- a/src/com/android/bluetooth/btservice/Config.java
++++ b/src/com/android/bluetooth/btservice/Config.java
+@@ -118,7 +118,8 @@
+             // First candidate: prevent OEM sink/HFP overlays starting extra profiles.
+             // QTI get_avrcp_service() returns null on this firmware. Do not start
+             // the incompatible AOSP C++ AVRCP Target service in the SBC candidate.
+-            if (config.mClass != A2dpService.class && config.mClass != GattService.class) {
++            if (config.mClass != A2dpService.class && config.mClass != GattService.class
++                    && config.mClass != HidHostService.class) {
+                 continue;
+             }
+             boolean supported = resources.getBoolean(config.mSupported);
