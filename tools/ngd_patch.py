@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Strict, profile-bound installer. Import/default help never contacts a device."""
 from pathlib import Path
-import argparse, datetime, hashlib, json, re, shlex, subprocess, time
+import argparse, datetime, hashlib, json, re, shlex, subprocess, sys, time
 
-BASE = Path(__file__).resolve().parents[1]
+BASE = Path(sys._MEIPASS) if getattr(sys, 'frozen', False) else Path(__file__).resolve().parents[1]
 DEVICE = '/data/local/ngd-native-bt'
 INIT = '/system/etc/init/ngd-native-bt.rc'
 PERMISSIONS = '/data/local/tmp/ngd15n-permissions.baseline'
@@ -74,6 +74,9 @@ def verify_release(root, profile=None):
     if profile['id'] == PROFILE:
         if expected['ngd16_native_bt'] != '99639abb94ba22370198080ab60a2003199c8a0a8f40145b4f55d2680b0cfd53':
             raise RuntimeError('STOP: unreviewed controller')
+        reviewed = json.loads((BASE/'profiles/payload-baseline-010.json').read_text(encoding='utf-8'))
+        if expected != reviewed['files']:
+            raise RuntimeError('STOP: baseline payload differs from reviewed set')
     else:
         validate_twin_profile(profile)
         if manifest.get('target_profile_sha256') != profile_digest(profile):

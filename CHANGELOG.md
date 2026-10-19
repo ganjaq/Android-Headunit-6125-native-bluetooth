@@ -2,6 +2,9 @@
 
 ## Unreleased - 2026-10-19
 
+- Added public Windows ADB frontend 0.3.0-preview1 with local checking, installation, rollback and separately confirmed restart. No Customer/Admin approval backend or account required.
+- Added device/connection/state binding and offline tests for frontend refusal boundaries, plus full baseline payload inventory pinning. Public EXE excludes OEM payload and uses existing reviewed local kits; existing modifications require separate update review.
+
 - Published the device-tested legacy Qualcomm AVRCP bridge and exact smali changes; user confirmed music and track titles in Audi MMI 3G+ before and after an Android restart.
 - Integrated matching APK/bridge pins into the supervisor, retaining the system-code-path and HCI gates.
 - Added an offline assembler and full reviewed inventory for the reference-profile AVRCP development variant. Clean-OEM installation of this variant and long-term stability remain unverified.

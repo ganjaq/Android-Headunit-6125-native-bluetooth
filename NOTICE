@@ -1,4 +1,5 @@
 NEXTGENDRIVE Native Bluetooth
+The optional public Windows installer executable bundles Python/Tk and a PyInstaller bootloader. Their separate notices are supplied in third-party-licenses in the download; project code remains Apache-2.0. No OEM Bluetooth payload is bundled with that executable.
 The AVRCP extension headers in src/android-app/jni/ngd_avrcp_legacy retain their Android Open Source Project and Linux Foundation copyright and Apache-2.0 notices. See docs/PROVENANCE.md for the upstream reference.
 Project additions: NEXTGENDRIVE contributors, 2026. Apache License 2.0.
 Contains source derived from the Android Open Source Project; retain individual copyright headers and licenses/AOSP-NOTICE.txt.

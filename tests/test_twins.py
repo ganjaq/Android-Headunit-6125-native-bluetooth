@@ -94,11 +94,11 @@ class TwinTests(unittest.TestCase):
         # this verifies the reference-profile policy, not real artifact integrity.
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);(root/'payload').mkdir()
-            expected={'BluetoothNGD.apk':'23df2f6c0da3a649d03716def7c37fc0aab4944f16b0d23106c83c1b45919e90',
-                      'ngd16_native_bt':'99639abb94ba22370198080ab60a2003199c8a0a8f40145b4f55d2680b0cfd53'}
-            for name in expected:(root/'payload'/name).write_bytes(b'SYNTHETIC TEST ONLY')
+            expected=json.loads((ROOT/'profiles/payload-baseline-010.json').read_text(encoding='utf-8'))['files']
+            for name in expected:
+                file=root/'payload'/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_bytes(b'SYNTHETIC TEST ONLY')
             (root/'manifest.json').write_text(json.dumps({'profile':ngd.PROFILE,'files':expected}))
-            with patch.object(ngd,'digest',side_effect=lambda path:expected[Path(path).name]):
+            with patch.object(ngd,'digest',side_effect=lambda path:expected[Path(path).relative_to(root/'payload').as_posix()]):
                 self.assertEqual(ngd.verify_release(root)['profile'],ngd.PROFILE)
                 expected['ngd16_native_bt']='0'*64
                 (root/'manifest.json').write_text(json.dumps({'profile':ngd.PROFILE,'files':expected}))

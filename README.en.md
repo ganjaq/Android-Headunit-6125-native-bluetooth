@@ -1,5 +1,7 @@
 # Android-Headunit-6125-native-bluetooth
 
+**Public Windows ADB installer — no account or Admin approval:** [download](https://github.com/ganjaq/Android-Headunit-6125-native-bluetooth/releases), [PL/EN guide](docs/PUBLIC_INSTALLER.md). The EXE uses a local reviewed kit; OEM binaries are not included. Preview release; a complete GUI installation on a clean unit is not yet hardware-verified.
+
 **19 October 2026: music and AVRCP Target track titles work in Audi MMI 3G+, including after an Android restart.** [Source, matched kit and PL/EN instructions](docs/AVRCP.md). Confirmed on one unit; the new variant's complete clean-OEM installation has only been checked offline.
 
 [Audi Bluetooth device-details crash fix](docs/SETTINGS_NULL_PROFILE.md)
