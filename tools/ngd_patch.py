@@ -61,6 +61,14 @@ def verify_release(root, profile=None):
         path = (root / 'payload' / rel).resolve()
         if (root/'payload') not in path.parents or path.is_symlink() or digest(path) != wanted:
             raise RuntimeError('STOP: payload hash/path mismatch: ' + rel)
+    variant = manifest.get('variant')
+    if variant is not None:
+        if variant != 'avrcp-legacy-20261019' or profile != load_profile():
+            raise RuntimeError('STOP: unknown variant or unreviewed variant target')
+        reviewed = json.loads((BASE/'profiles/payload-avrcp-20261019.json').read_text(encoding='utf-8'))
+        if expected != reviewed['files']:
+            raise RuntimeError('STOP: AVRCP payload differs from reviewed set')
+        return manifest
     if expected['BluetoothNGD.apk'] != '23df2f6c0da3a649d03716def7c37fc0aab4944f16b0d23106c83c1b45919e90':
         raise RuntimeError('STOP: unreviewed APK; a rebuilt variant needs a new reviewed release')
     if profile['id'] == PROFILE:

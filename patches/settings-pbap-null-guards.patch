@@ -1,0 +1,29 @@
+--- a/smali/com/android/settings/bluetooth/BluetoothDetailsProfilesController.smali
++++ b/smali/com/android/settings/bluetooth/BluetoothDetailsProfilesController.smali
+@@ -223,6 +223,8 @@
+     move-result-object v2
+ 
+     .line 201
++    if-eqz v2, :cond_1f
++
+     invoke-interface {v0, v2}, Ljava/util/List;->add(Ljava/lang/Object;)Z
+ 
+     .line 204
+@@ -245,6 +247,8 @@
+     if-eqz v1, :cond_32
+ 
+     .line 207
++    if-eqz p0, :cond_32
++
+     invoke-interface {v0, p0}, Ljava/util/List;->add(Ljava/lang/Object;)Z
+ 
+     :cond_32
+@@ -713,6 +717,8 @@
+     check-cast v1, Lcom/android/settingslib/bluetooth/LocalBluetoothProfile;
+ 
+     .line 269
++    if-eqz v1, :goto_8
++
+     invoke-interface {v1}, Lcom/android/settingslib/bluetooth/LocalBluetoothProfile;->isProfileReady()Z
+ 
+     move-result v2

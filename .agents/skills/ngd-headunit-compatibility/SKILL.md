@@ -59,6 +59,9 @@ Buduj w istniejącym pasującym AOSP Android 10/WSL/Linux z przypiętymi zależn
 
 ## 5. Plan odzyskania przed instalacją
 
+W [analizie kanałów odzyskiwania](../../../docs/recovery/README.md) zapisano zewnętrzny przypadek XTRONS Android12: UART, EDL/QFIL, fastboot i modemst. Traktuj go jako materiał porównawczy, nie gotową naprawę Android10 ani podstawę recovery-confirmed. Nie uruchamiaj poleceń kasowania z cytowanej relacji.
+
+
 Przygotuj backup tej jednostki, metadane, hashe, dokładną listę dodawanych/zmienianych plików i stanów, komendy cofnięcia oraz kontrolę odczytem po zmianie. Potwierdź drogę odzyskania także bez ADB po starcie. Sam backup plików ani założenie, że restart usunie bind mount, nie wystarcza dla trwałego autostartu init.
 
 Nie kopiuj na ślepo sposobu zapisu dm-3/ext4 ani wartości reserved_clusters. Nie edytuj ręcznie PackageManager, nie chownuj danych, nie obchodź podpisów. Nie flashuj i nie zmieniaj SELinux, aby wymusić zgodność. Zatrzymanie całego BLINK może odłączyć CarPlay/AA i funkcje OEM; zachowanie procesu MCU nie dowodzi działania wszystkich jego funkcji.
@@ -81,3 +84,5 @@ Rozdzielenie telefonu HFP i radia A2DP w Audi zostało potwierdzone przez właś
 Dostarcz mapę zgodności, źródła dowodów, konkretne zmiany i artefakty z hashami, wyniki build/testów, nowy profil kandydujący i jedną procedurę testu/cofnięcia. Wydanie dopiero po rozdzieleniu poziomu offline od hardware. Nie publikuj danych OEM bez ustalenia praw. Zaktualizuj dokumentację PL/EN; nie wysyłaj na Git bez zakresu publikacji uzgodnionego z użytkownikiem.
 
 This skill is an engineering workflow for a rejected unit, not an installer bypass. Preserve the verified baseline, establish hardware and ABI evidence, port only necessary integration, and require device-specific recovery and hardware tests before claiming support.
+
+AVRCP Target integration: read `docs/AVRCP.md` and `patches/avrcp-legacy/README.md`. A Bluetooth `UPDATED_SYSTEM_APP` in `/data/app` violates the reviewed guard contract; do not remove that guard. Pair APK, bridge and controller revisions. The 2026-10-19 AVRCP hardware result applies to the reference unit; baseline twin kits do not inherit it.

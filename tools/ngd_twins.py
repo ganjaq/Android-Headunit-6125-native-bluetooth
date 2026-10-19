@@ -57,6 +57,16 @@ def prepare(report, target_id, out):
     if out.exists(): raise RuntimeError('STOP: target workspace exists; no overwrite')
     out.mkdir(parents=True)
     shutil.copytree(BASE/'src', out/'src')
+    # Twin kits retain the reviewed 0.1.0 APK. Do not accidentally compile a
+    # controller pinned to the newer, separately tested AVRCP APK/bridge.
+    for relative in ('session/ngd12_artifact_digests.h', 'android-app/jni/ngd12_artifact_digests.h'):
+        path = out/'src'/relative
+        text = path.read_text(encoding='utf-8')
+        text = '\n'.join(line for line in text.splitlines() if 'NGD_AVRCP_BRIDGE_SHA' not in line)
+        import re
+        text = re.sub(r'(#define NGD12_APK_SHA )"[a-f0-9]{64}"',
+                      r'\1"23df2f6c0da3a649d03716def7c37fc0aab4944f16b0d23106c83c1b45919e90"', text)
+        path.write_text(text+'\n', encoding='utf-8')
     for relative in ('session/ngd_native_session_main.cpp', 'installer/init_installer.cpp',
                      'android-app/jni/ngd_native_session_main.cpp', 'android-app/jni/ngd16_init_installer.cpp'):
         path = out/'src'/relative
@@ -99,6 +109,8 @@ def seal(workspace, controller, installer, base_release, out, acknowledged=False
     actual = {p.relative_to(workspace).as_posix(): digest(p) for p in (workspace/'src').rglob('*') if p.is_file()}
     if actual != inventory: raise RuntimeError('STOP: prepared source changed; review/regenerate workspace')
     base_manifest = verify_release(base_release)
+    if base_manifest.get('variant') is not None:
+        raise RuntimeError('STOP: twin workflow currently requires the baseline 0.1.0 payload')
     for path in (controller, installer): check_target_elf(path, profile['fingerprint'])
     if out.exists(): raise RuntimeError('STOP: kit exists; no overwrite')
     out.mkdir(parents=True)

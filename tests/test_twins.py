@@ -37,6 +37,10 @@ class TwinTests(unittest.TestCase):
                 s=(out/'src'/rel).read_text(encoding='utf-8');self.assertIn(p['fingerprint'],s)
                 self.assertNotIn(ngd.load_profile()['fingerprint'],s)
             self.assertEqual(p['factory_files'],ngd.load_profile()['factory_files'])
+            for rel in ('session/ngd12_artifact_digests.h', 'android-app/jni/ngd12_artifact_digests.h'):
+                pins = (out/'src'/rel).read_text(encoding='utf-8')
+                self.assertIn('23df2f6c0da3a649d03716def7c37fc0aab4944f16b0d23106c83c1b45919e90', pins)
+                self.assertNotIn('NGD_AVRCP_BRIDGE_SHA', pins)
             with self.assertRaisesRegex(RuntimeError,'no overwrite'):twins.prepare(self.candidate(),'trinket-test-twin',out)
     def test_candidate_cannot_weaken_partition_or_runtime_checks(self):
         with tempfile.TemporaryDirectory() as d:

@@ -115,11 +115,11 @@ public class Config {
 
         ArrayList<Class> profiles = new ArrayList<>(PROFILE_SERVICES_AND_FLAGS.length);
         for (ProfileConfig config : PROFILE_SERVICES_AND_FLAGS) {
-            // First candidate: prevent OEM sink/HFP overlays starting extra profiles.
-            // QTI get_avrcp_service() returns null on this firmware. Do not start
-            // the incompatible AOSP C++ AVRCP Target service in the SBC candidate.
+            // Keep unsupported OEM sink/HFP overlays disabled. AVRCP Target uses
+            // the verified legacy QTI bridge instead of the unavailable C++ API.
             if (config.mClass != A2dpService.class && config.mClass != GattService.class
-                    && config.mClass != HidHostService.class) {
+                    && config.mClass != HidHostService.class
+                    && config.mClass != AvrcpTargetService.class) {
                 continue;
             }
             boolean supported = resources.getBoolean(config.mSupported);

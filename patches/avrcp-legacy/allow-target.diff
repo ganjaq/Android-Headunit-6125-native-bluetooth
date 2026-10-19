@@ -1,0 +1,13 @@
+--- Config.before
++++ Config.after
+@@ -445,6 +445,10 @@
+ 
+     if-eq v6, v7, :cond_2d
+ 
++    const-class v7, Lcom/android/bluetooth/avrcp/AvrcpTargetService;
++
++    if-eq v6, v7, :cond_2d
++
+     goto :goto_84
+ 
+     .line 125

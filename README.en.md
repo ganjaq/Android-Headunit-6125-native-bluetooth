@@ -1,5 +1,9 @@
 # Android-Headunit-6125-native-bluetooth
 
+**19 October 2026: music and AVRCP Target track titles work in Audi MMI 3G+, including after an Android restart.** [Source, matched kit and PL/EN instructions](docs/AVRCP.md). Confirmed on one unit; the new variant's complete clean-OEM installation has only been checked offline.
+
+[Audi Bluetooth device-details crash fix](docs/SETTINGS_NULL_PROFILE.md)
+
 A project developed using vibe coding - Native Android 10 Bluetooth for the qti/trinket/ QKQ1.200816.002 / eng.zouqiao.20250217.185927/ Qualcomm 6125 / BLINK_6125 head unit - the NEXTGENDRIVE project.
 
 [Polski](README.md) · [User guide](docs/USER_GUIDE.en.md) · [Installation](docs/INSTALLATION.en.md) · [Rollback](docs/ROLLBACK.en.md) · [Source and build](docs/BUILD.md)

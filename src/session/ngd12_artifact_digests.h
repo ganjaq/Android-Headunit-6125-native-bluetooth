@@ -1,4 +1,6 @@
 // Pinned to the actual compiled payload; no placeholder can pass runtime preflight.
 #define NGD12_HOLD_SHA "63c4f49e5a91ab5373b81b322685374ed73b9cb887659c2e17c1af2d0067980b"
-#define NGD12_APK_SHA "23df2f6c0da3a649d03716def7c37fc0aab4944f16b0d23106c83c1b45919e90"
+#define NGD12_APK_SHA "975adb9b2f5940930f0b8bb9587c4fc5962ceb8164c8ccf1db0f67f2342aaa15"
 #define NGD12_JNI_SHA "d51b839a13ffe91bd96c17d18fb17a0b95a6e8347ad73f480364f6837c27e858"
+
+#define NGD_AVRCP_BRIDGE_SHA "d83e7d82a94de5be06bed9ec1675ef5980a02a63c7d15f580a77d3a30c7ba0f5"

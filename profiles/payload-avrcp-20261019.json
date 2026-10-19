@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0-dev",
+  "profile": "blink6125-qti-20250217-arm64-a",
+  "files": {
+    "BluetoothNGD.apk": "975adb9b2f5940930f0b8bb9587c4fc5962ceb8164c8ccf1db0f67f2342aaa15",
+    "libbluetooth_jni_ngd.so": "d51b839a13ffe91bd96c17d18fb17a0b95a6e8347ad73f480364f6837c27e858",
+    "ngd-native-bt.rc": "ea69d9fc710995c2ea8d7738d471b10124eace6837bdb36c84b013156e558b2c",
+    "ngd16_init_installer": "e135a79b9ed20593c3507128090c0403769b411b5ee07bd88469b8752b0f8b3f",
+    "ngd16_native_bt": "5acb4f357b8238ded8039c9f4c2c6e7156a6ca906f247d561b6333fea21f3195",
+    "ngd_blink_hold12": "63c4f49e5a91ab5373b81b322685374ed73b9cb887659c2e17c1af2d0067980b",
+    "permissions.jar": "2694207165d54f4e84e219bc0e7ffc5ac459eca10bd00e30dbf25b4874c4491f",
+    "Settings.bluetooth-visible.apk": "fed58fe187827f26ee54b618f5f0dbc88f28d5cfc1fa1986bf07208a3569b927",
+    "lib/arm64/libbluetooth-binder.so": "74ebdee634c68e84a41baa94bcba3f6eb253411c7a7144ac8b2d76bb3d08c095",
+    "lib/arm64/libbluetooth_jni_ngd.so": "d51b839a13ffe91bd96c17d18fb17a0b95a6e8347ad73f480364f6837c27e858",
+    "lib/arm64/libchrome.so": "43fccbd91ff531a3f71d2ea64bf35b6eab9f76405346877bd75cc50b74e3264a",
+    "lib/arm64/libevent.so": "808fb6f5beccd4ceeaa8b2e7a56c081cef9da7365ed429638ad2b2710482c177",
+    "lib/arm64/libnativehelper.so": "3ded35847f2eb06c20a48172f1c32556f09a8fec68e234f667c9035d74356678",
+    "lib/arm64/libngd_avrcp_legacy.so": "d83e7d82a94de5be06bed9ec1675ef5980a02a63c7d15f580a77d3a30c7ba0f5"
+  },
+  "core_apk_sha256": "975adb9b2f5940930f0b8bb9587c4fc5962ceb8164c8ccf1db0f67f2342aaa15",
+  "controller_sha256": "5acb4f357b8238ded8039c9f4c2c6e7156a6ca906f247d561b6333fea21f3195",
+  "variant": "avrcp-legacy-20261019",
+  "evidence": {
+    "clean_oem_install_tested": false,
+    "units_tested": 1,
+    "android_restart_tested": true,
+    "cold_power_cycle_tested": false,
+    "music_and_titles_user_confirmed": true
+  }
+}

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased - 2026-10-19
+
+- Published the device-tested legacy Qualcomm AVRCP bridge and exact smali changes; user confirmed music and track titles in Audi MMI 3G+ before and after an Android restart.
+- Integrated matching APK/bridge pins into the supervisor, retaining the system-code-path and HCI gates.
+- Added an offline assembler and full reviewed inventory for the reference-profile AVRCP development variant. Clean-OEM installation of this variant and long-term stability remain unverified.
+- Preserved baseline twin preparation with explicit baseline APK pins; AVRCP validation is not inherited by other units.
+
+- Added the Settings PBAP/MAP null-profile guard patch and documented its single-unit device validation; no unsupported Bluetooth profiles are enabled.
+
 ## Unreleased - 2026-10-18
 
 - Consolidated compatibility documentation and refreshed offline validation.

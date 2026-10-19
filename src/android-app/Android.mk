@@ -19,7 +19,7 @@ LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_CERTIFICATE := platform
 LOCAL_USE_AAPT2 := true
 LOCAL_AAPT_FLAGS += --custom-package com.android.bluetooth
-LOCAL_JNI_SHARED_LIBRARIES := libbluetooth_jni_ngd libngd_runtime_bluetooth_binder libngd_runtime_chrome libngd_runtime_nativehelper libngd_runtime_event
+LOCAL_JNI_SHARED_LIBRARIES := libbluetooth_jni_ngd libngd_avrcp_legacy libngd_runtime_bluetooth_binder libngd_runtime_chrome libngd_runtime_nativehelper libngd_runtime_event
 LOCAL_JAVA_LIBRARIES := javax.obex telephony-common services.net
 LOCAL_STATIC_JAVA_LIBRARIES := \
         com.android.vcard \

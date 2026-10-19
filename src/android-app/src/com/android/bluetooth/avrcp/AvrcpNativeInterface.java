@@ -48,10 +48,13 @@ public class AvrcpNativeInterface {
     void init(AvrcpTargetService service) {
         d("Init AvrcpNativeInterface");
         mAvrcpService = service;
-        initNative();
+        if (!NgdAvrcpLegacy.start(this)) {
+            initNative();
+        }
     }
 
     void cleanup() {
+        NgdAvrcpLegacy.stop();
         d("Cleanup AvrcpNativeInterface");
         mAvrcpService = null;
         cleanupNative();
@@ -157,14 +160,18 @@ public class AvrcpNativeInterface {
         d("sendMediaUpdate: metadata=" + metadata
                 + " playStatus=" + playStatus
                 + " queue=" + queue);
-        sendMediaUpdateNative(metadata, playStatus, queue);
+        if (!NgdAvrcpLegacy.notifyUpdate(metadata, playStatus, queue)) {
+            sendMediaUpdateNative(metadata, playStatus, queue);
+        }
     }
 
     void sendFolderUpdate(boolean availablePlayers, boolean addressedPlayers, boolean uids) {
         d("sendFolderUpdate: availablePlayers=" + availablePlayers
                 + " addressedPlayers=" + addressedPlayers
                 + " uids=" + uids);
-        sendFolderUpdateNative(availablePlayers, addressedPlayers, uids);
+        if (!NgdAvrcpLegacy.notifyFolder(availablePlayers, addressedPlayers, uids)) {
+            sendFolderUpdateNative(availablePlayers, addressedPlayers, uids);
+        }
     }
 
     void playItem(int playerId, boolean nowPlaying, String mediaId) {

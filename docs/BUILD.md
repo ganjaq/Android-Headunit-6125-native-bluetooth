@@ -1,5 +1,9 @@
 # Źródła i budowa / Source and build
 
+Aktualny eksport zawiera [AVRCP Target i integrację startową](AVRCP.md). Dodatkowy moduł do budowy: `libngd_avrcp_legacy` (ARM64). Dokładnie testowane smali są w `patches/avrcp-legacy`; źródło Java odtwarza ich zachowanie, lecz nowy pełny rebuild APK/Soong nie został potwierdzony. Nadzorca w aktualnych źródłach przypina nowy zestaw APK/bridge. Przygotowanie bliźniaczego wariantu jawnie przywraca przypięcia bazowego APK bez AVRCP, zgodnie z używaną tam paczką bazową.
+
+The current source export includes [AVRCP Target and startup integration](AVRCP.md). Build the additional ARM64 `libngd_avrcp_legacy` module. Exact tested smali is preserved separately; equivalent Java and the new full APK/Soong build have not been validated by a clean rebuild. The current supervisor pins the newer APK/bridge pair. Twin preparation restores baseline APK pins without the bridge, matching its baseline payload. See the AVRCP guide for offline kit assembly; do not pair newly compiled binaries with an old manifest.
+
 ## PL
 
 Gotowy pakiet lokalny zachowuje dokładne hashe sprawdzonej kompilacji. Nie przebudowywaliśmy jej tylko na potrzeby pakowania.

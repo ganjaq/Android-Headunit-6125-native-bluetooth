@@ -1,5 +1,9 @@
 # Android-Headunit-6125-native-bluetooth
 
+**Aktualizacja 19.10.2026: muzyka i tytuły utworów przez AVRCP Target działają w Audi MMI 3G+, także po restarcie Androida.** [Źródła, zgodny zestaw i instrukcja PL/EN](docs/AVRCP.md). Potwierdzono na jednej jednostce; instalację nowego wariantu od czystego OEM sprawdzono dotąd tylko offline.
+
+[Naprawa awarii szczegółów Bluetooth Audi](docs/SETTINGS_NULL_PROFILE.md)
+
 Projekt rozwijany metodą vibe coding - Natywny Bluetooth Androida 10 dla radia qti/trinket/ QKQ1.200816.002 / eng.zouqiao.20250217.185927/ Qualcomm 6125 / BLINK_6125 — projekt NEXTGENDRIVE.
 
 [English](README.en.md) · [Instrukcja obsługi](docs/OBSLUGA.md) · [Instalacja](docs/INSTALACJA.md) · [Cofnięcie](docs/COFNIECIE.md) · [Źródła i budowa](docs/BUILD.md)

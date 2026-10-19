@@ -99,7 +99,7 @@ bool OriginalGone(dev_t dev,ino_t ino) {
  DIR* d=opendir("/proc");if(!d)return false;bool gone=true;struct dirent* entry;
  while((entry=readdir(d))) {char* end=nullptr;long pid=strtol(entry->d_name,&end,10);if(!end||*end||pid<=0)continue;
   struct stat s={};std::string file="/proc/"+std::to_string(pid)+"/exe";
-  if(stat(file.c_str(),&s)==0){if(s.st_dev==dev&&s.st_ino==ino)gone=false;}else if(errno!=ENOENT&&errno!=ESRCH)gone=false;
+  if(stat(file.c_str(),&s)==0){if(s.st_dev==dev&&s.st_ino==ino){std::printf("NGD_GUARD_OEM_EXE_PRESENT pid=%ld\n",pid);gone=false;}}else if(errno!=ENOENT&&errno!=ESRCH){const int error=errno;std::printf("NGD_GUARD_EXE_STAT_ERROR pid=%ld errno=%d\n",pid,error);gone=false;}
  }
  closedir(d);return gone;
 }
@@ -131,7 +131,21 @@ bool LoadJournal(Journal* j) {
  return ok&&n>0&&fields>=3;
 }
 bool AppendJournal(const std::string& text) {int fd=open(kJournal,O_WRONLY|O_APPEND|O_NOFOLLOW|O_CLOEXEC);if(fd<0)return false;bool ok=write(fd,text.data(),text.size())==static_cast<ssize_t>(text.size())&&fsync(fd)==0;close(fd);return ok;}
-bool Barrier(const Journal& j) {return SameInode(kBlink,kHold)&&Hash(kHold)==NGD12_HOLD_SHA&&MaskVisibleInAllExistingNamespaces()&&OriginalGone(j.dev,j.ino);}
+bool BarrierOnce(const Journal& j) {
+ if(!SameInode(kBlink,kHold)){std::printf("NGD_GUARD_FAIL mask_inode\n");return false;}
+ if(Hash(kHold)!=NGD12_HOLD_SHA){std::printf("NGD_GUARD_FAIL hold_hash\n");return false;}
+ if(!MaskVisibleInAllExistingNamespaces()){std::printf("NGD_GUARD_FAIL namespace\n");return false;}
+ if(!OriginalGone(j.dev,j.ino)){std::printf("NGD_GUARD_FAIL original_exe\n");return false;}
+ return true;
+}
+bool Barrier(const Journal& j) {
+ for(int attempt=0;attempt<3;++attempt){
+  if(BarrierOnce(j)){if(attempt)std::printf("NGD_GUARD_RECHECK_PASS attempt=%d\n",attempt+1);return true;}
+  std::fflush(stdout);
+  if(attempt<2)usleep(20000);
+ }
+ std::printf("NGD_GUARD_RECHECK_DENY attempts=3\n");std::fflush(stdout);return false;
+}
 ngd::HciProbeResult RootProbe(int pid,bool admitted,const Journal& j) {
  // This explicit override is root-only, after the executable maintenance barrier.
  return ngd::ProbeHciForProcess(pid,admitted,Barrier(j));
@@ -249,6 +263,9 @@ class Runtime final : public ngd12::Operations {
      auto pkg=Run({"/system/bin/dumpsys","package","org.codeaurora.bluetooth"});if(!pkg.ok||pkg.output.find("userId=1002")==std::string::npos||pkg.output.find("UPDATED_SYSTEM_APP")!=std::string::npos||pkg.output.find("SYSTEM")==std::string::npos||pkg.output.find("codePath=/system/app/BluetoothExt")==std::string::npos){std::printf("NGD_PREFLIGHT_REJECT line=%d errno=%d\n",__LINE__,errno);std::fflush(stdout);return false;}
      auto path=Run({"/system/bin/pm","path","org.codeaurora.bluetooth"});auto apk=Trim(path.output);
      if(!path.ok||apk!="package:/system/app/BluetoothExt/BluetoothExt.apk"||apk.find('\n')!=std::string::npos||Hash(apk.substr(8).c_str())!=NGD12_APK_SHA){std::printf("NGD_PREFLIGHT_REJECT line=%d errno=%d\n",__LINE__,errno);std::fflush(stdout);return false;}
+#ifdef NGD_AVRCP_BRIDGE_SHA
+     if(Hash("/system/app/BluetoothExt/lib/arm64/libngd_avrcp_legacy.so")!=NGD_AVRCP_BRIDGE_SHA){std::printf("NGD_AVRCP_BRIDGE_REJECT\n");std::fflush(stdout);return false;}
+#endif
      auto mcu=Processes("com.carocean.mcuserver");if(mcu.size()!=1){std::printf("NGD_PREFLIGHT_REJECT line=%d errno=%d\n",__LINE__,errno);std::fflush(stdout);return false;}initial_mcu_=mcu[0];
      if(ReadFile("/proc/"+std::to_string(initial_mcu_)+"/cgroup").find("/uid_1000/pid_")==std::string::npos){std::printf("NGD_PREFLIGHT_REJECT line=%d errno=%d\n",__LINE__,errno);std::fflush(stdout);return false;}
      if(Hash("/data/local/ngd-native-bt/permissions.jar")!="2694207165d54f4e84e219bc0e7ffc5ac459eca10bd00e30dbf25b4874c4491f"||!data_.LoadVerified("/data/local/ngd-native-bt/oem.snapshot")){std::printf("NGD_PREFLIGHT_REJECT line=%d errno=%d\n",__LINE__,errno);std::fflush(stdout);return false;}data_saved_=true;
@@ -526,7 +543,12 @@ bool TrustedTree(const std::string& path) {
 bool TrustedPayload() {
  struct stat st={};const char* root="/data/local/ngd-native-bt";
  if(lstat(root,&st)||!S_ISDIR(st.st_mode)||st.st_uid!=0||(st.st_mode&0777)!=0700)return false;
- return TrustedTree(std::string(root)+"/Settings.bluetooth-visible.apk")&&TrustedTree(std::string(root)+"/view/candidate")&&
+ return Hash("/data/local/ngd-native-bt/view/candidate/BluetoothExt.apk")==NGD12_APK_SHA&&
+  Hash("/data/local/ngd-native-bt/view/candidate/lib/arm64/libbluetooth_jni_ngd.so")==NGD12_JNI_SHA&&
+#ifdef NGD_AVRCP_BRIDGE_SHA
+  Hash("/data/local/ngd-native-bt/view/candidate/lib/arm64/libngd_avrcp_legacy.so")==NGD_AVRCP_BRIDGE_SHA&&
+#endif
+  TrustedTree(std::string(root)+"/Settings.bluetooth-visible.apk")&&TrustedTree(std::string(root)+"/view/candidate")&&
   TrustedTree(std::string(root)+"/ngd_blink_hold12")&&
   TrustedTree(std::string(root)+"/ngd16_native_bt")&&
   TrustedTree(std::string(root)+"/permissions.jar")&&

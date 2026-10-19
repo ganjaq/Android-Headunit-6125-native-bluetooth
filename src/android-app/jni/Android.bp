@@ -1,3 +1,14 @@
+// Separate bridge; the existing adapter JNI and Qualcomm library are retained.
+cc_library_shared {
+    name: "libngd_avrcp_legacy",
+    srcs: ["ngd_avrcp_legacy/ngd_avrcp_legacy_bridge.cpp"],
+    compile_multilib: "64",
+    header_libs: ["jni_headers"],
+    shared_libs: ["liblog", "libdl"],
+    stl: "none",
+    cflags: ["-Wall", "-Wextra", "-Wno-unused-parameter", "-std=c++17"],
+}
+
 cc_library_shared {
     name: "libbluetooth_jni_ngd",
     compile_multilib: "64",

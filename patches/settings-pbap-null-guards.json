@@ -1,0 +1,32 @@
+{
+  "patch": "settings-pbap-null-guards.patch",
+  "target_class": "com.android.settings.bluetooth.BluetoothDetailsProfilesController",
+  "input_settings_sha256": "fed58fe187827f26ee54b618f5f0dbc88f28d5cfc1fa1986bf07208a3569b927",
+  "input_description": "Existing Bluetooth-visible Settings.apk; this is not the unmodified OEM APK",
+  "oem_settings_sha256": "46ea77f8832d248d9c0ed695016d2ecd56caf994fd31946f845d3cc94aec95e6",
+  "output_settings_sha256": "d6357b18acb210aa6274a4f4c0aac3b99e0d2100bd765feda5cfb493ec60f756",
+  "signing_certificate_sha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+  "changed_apk_entries": [
+    "classes.dex"
+  ],
+  "guards": [
+    "Skip null PBAP profile when building the details profile list",
+    "Skip null MAP profile when building the details profile list",
+    "Skip null profile before calling LocalBluetoothProfile.isProfileReady"
+  ],
+  "does_not_enable": [
+    "PBAP",
+    "MAP",
+    "A2DP Sink",
+    "HFP"
+  ],
+  "offline_validation": {
+    "smali_roundtrip": "PASS",
+    "android_art_verify_exit_code": 0,
+    "device_ui_test": "One tap on Audi MMI 5359 settings opened Device details; Audi Active and Media audio ON; no new FATAL/isProfileReady/VerifyError in crash buffer",
+    "bluetooth_before_and_after": "ON; A2DP Connected; mIsPlaying=true; Bluetooth stack, HAL and supervisor PIDs unchanged",
+    "install_result": "pm install -r returned Success; only com.android.settings package updated",
+    "test_limit": "Single device UI test; no long-duration stability test or listening confirmation"
+  },
+  "distribution_note": "The APK and signing key are not included. Do not apply to a different Settings base without verifying its hash and signature."
+}
