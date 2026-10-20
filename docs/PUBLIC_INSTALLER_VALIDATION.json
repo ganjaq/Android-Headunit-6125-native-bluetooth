@@ -1,0 +1,23 @@
+{
+  "installer_version": "0.3.0-rc1",
+  "validation_date": "2026-10-20",
+  "profile": "blink6125-qti-20250217-arm64-a",
+  "runtime_variant": "avrcp-legacy-20261019",
+  "windows_python_tests": {"run": 59, "failures": 0, "errors": 0},
+  "packaged_exe_sha256": "ccdf864bb7cadcac054f3cf59649fb8224f84b0c5227baf16b86c31a022a77d9",
+  "packaged_exe_hidden_gui_startup_and_resources": "PASS",
+  "packaged_exe_real_input_offline_reconstruction": "PASS: all 14 files match the reviewed complete kit",
+  "read_pull_prepare_flow": "PASS using a controlled read/pull-only ADB adapter and real privately held OEM inputs; not a live fresh-radio installation",
+  "tested_bluetooth_apk_sha256": "975adb9b2f5940930f0b8bb9587c4fc5962ceb8164c8ccf1db0f67f2342aaa15",
+  "tested_settings_apk_sha256": "fed58fe187827f26ee54b618f5f0dbc88f28d5cfc1fa1986bf07208a3569b927",
+  "runtime_apk_jni_controller_hashes_changed": false,
+  "separate_payload_folder_required": false,
+  "adb_included": "Official Google Android Platform-Tools 37.0.1; repository metadata and SHA-256 pins retained",
+  "java_or_signing_private_key_required": false,
+  "oem_library_payload_in_download": false,
+  "settings_entry_payload_in_download": false,
+  "pairing_data_or_user_logs_in_download": false,
+  "radio_modified_during_this_packaging_task": false,
+  "fresh_oem_full_gui_install_and_rollback_hardware_tested": false,
+  "scope": "Complete PC-side package for the reviewed reference profile, not universal hardware validation"
+}

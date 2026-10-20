@@ -10,6 +10,61 @@ import ngd_public_installer as public
 
 
 class PublicInstallerTests(unittest.TestCase):
+    def test_rollback_without_cached_kit_reconstructs_locally_before_backend(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            kit = root/'kit'
+            kit.mkdir()
+            (kit/'manifest.json').write_text('{}')
+            engine = public.Installer('adb', None, root/'private', root=False)
+            adb = Mock()
+            with patch.object(public, 'connect', return_value=adb), patch.object(public, 'device_identity', return_value='f'*64), \
+                    patch('ngd_components.prepare', return_value=kit) as prepare, patch.object(public.ngd, 'remove') as remove:
+                engine.rollback(accepted=True)
+                self.assertTrue(prepare.call_args.kwargs['restore'])
+                remove.assert_called_once()
+                self.assertEqual(remove.call_args.args[2], kit)
+
+    def test_bad_local_receipt_cannot_authorize_rollback(self):
+        import tempfile, json
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root/'receipts').mkdir()
+            (root/'receipts'/('f'*64+'.json')).write_text(json.dumps({'identity':'another radio','profile_sha256':'bad'}))
+            engine = public.Installer('adb', None, root, root=False)
+            with patch.object(public, 'connect'), patch.object(public, 'device_identity', return_value='f'*64), \
+                    patch.object(public.ngd, 'remove') as remove, patch('ngd_components.prepare') as prepare:
+                with self.assertRaisesRegex(RuntimeError, 'identity/profile mismatch'): engine.rollback(accepted=True)
+                remove.assert_not_called()
+                prepare.assert_not_called()
+
+    def test_default_check_prepares_kit_then_install_requires_explicit_confirmation(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            kit = folder/'kit'
+            kit.mkdir()
+            (kit/'manifest.json').write_text('{}')
+            engine = public.Installer('adb', None, folder/'private', root=False)
+            adb = Mock()
+            adb.exists.return_value = False
+            adb.sh.return_value = '0'
+            adb.prop.return_value = 'synthetic'
+            baseline = {'profile':engine.profile['id'],'boot':'same','audio':{}}
+            with patch.object(public, 'connect', return_value=adb), patch.object(public, 'device_identity', return_value='f'*64), \
+                    patch.object(public.ngd, 'inspect', return_value=baseline), \
+                    patch.object(public.ngd, 'verify_release', return_value={'version':'test'}), \
+                    patch('ngd_components.prepare', return_value=kit) as prepare, patch.object(public.ngd, 'install') as install:
+                self.assertEqual(engine.check()['status'], 'READY')
+                prepare.assert_called_once()
+                install.assert_not_called()
+                with self.assertRaises(RuntimeError): engine.install(accepted=False)
+                install.assert_not_called()
+                engine.install(accepted=True)
+                self.assertEqual(install.call_count, 1)
+                self.assertTrue((folder/'private/receipts'/('f'*64+'.json')).is_file())
+
     def test_transport_handles_vendor_question_mark_serial(self):
         self.assertEqual(public.select_transport('List of devices attached\n? device product:trinket transport_id:4\n'), '4')
 

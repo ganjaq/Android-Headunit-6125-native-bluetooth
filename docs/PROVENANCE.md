@@ -1,5 +1,8 @@
 # Pochodzenie / Provenance
 
+- Complete public installer 0.3.0-rc1: `installer/components` contains project/AOSP binaries, a Bluetooth APK fragment excluding its four OEM library payloads, and Settings ZIP/signing metadata only. Every Settings entry payload is reconstructed from the owner's original APK; the sole code transformation is the already reviewed visibility flag/checksums. No signing private key is required or distributed. SHA-256 of both reconstructed APKs and all runtime files stays identical to the reviewed AVRCP kit. `profiles/public-components-20261020.json` records every distributed component and required local OEM input.
+- Official bundled ADB 37.0.1 is pinned in `profiles/public-adb-3701.json`, downloaded from Google's repository and checked against its repository metadata; original ADB notices are retained. It is separate from project Apache-2.0 code. The public installer makes no OEM-data upload.
+
 - AVRCP bridge: project source from the locally tested 2026-10-19 integration, with the exact tested smali preserved in `patches/avrcp-legacy`. Java is an equivalent source reconstruction, not a claim of a clean bit-identical rebuild. Reviewed public hashes are in `profiles/payload-avrcp-20261019.json`; OEM payload and raw device logs remain local.
 - Qualcomm extension headers retain their original notices. Upstream reference: [AOSPA Bluetooth extension, quartz](https://github.com/AOSPA/android_vendor_qcom_opensource_commonsys_bluetooth_ext/blob/quartz/vhal/include/hardware/bt_rc_ext.h). These layouts were checked for the tested runtime; their existence is not evidence of ABI compatibility elsewhere.
 

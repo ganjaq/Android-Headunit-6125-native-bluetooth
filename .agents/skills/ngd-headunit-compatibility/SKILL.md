@@ -85,4 +85,6 @@ Dostarcz mapę zgodności, źródła dowodów, konkretne zmiany i artefakty z ha
 
 This skill is an engineering workflow for a rejected unit, not an installer bypass. Preserve the verified baseline, establish hardware and ABI evidence, port only necessary integration, and require device-specific recovery and hardware tests before claiming support.
 
+The complete public installer is documented in `docs/PUBLIC_INSTALLER.md`. Automatic preparation reconstructs exact reviewed artifacts from bundled project components and five locally read OEM inputs. Recipes/hashes live in `profiles/public-components-20261020.json`; do not broaden those pins just to accept a rejected unit. The exact runtime is unchanged, and a new hardware profile still needs independent review. No manual payload folder is needed for the reference profile.
+
 AVRCP Target integration: read `docs/AVRCP.md` and `patches/avrcp-legacy/README.md`. A Bluetooth `UPDATED_SYSTEM_APP` in `/data/app` violates the reviewed guard contract; do not remove that guard. Pair APK, bridge and controller revisions. The 2026-10-19 AVRCP hardware result applies to the reference unit; baseline twin kits do not inherit it.

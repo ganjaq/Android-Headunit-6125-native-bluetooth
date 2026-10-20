@@ -1,5 +1,7 @@
 # Tytuły utworów w Audi / Track titles in Audi
 
+Aktualizacja / Update: [kompletny instalator Windows 0.3.0-rc1](PUBLIC_INSTALLER.md) automatycznie przygotowuje opisany niżej zestaw z dołączonych składników projektu i własnych OEM odczytanych z radia. Manualne składanie pozostaje opcją dla programistów. / The complete installer now prepares this exact kit automatically from bundled project components and OEM inputs read locally; the manual workflow below is retained for developers.
+
 ## PL
 
 19 października 2026 użytkownik potwierdził muzykę i tytuły utworów w Audi MMI 3G+ z naszego radia trinket/6125. Po jednym restarcie Androida ponownie potwierdził muzykę i tytuły; odczyty potwierdziły automatyczny start Bluetooth i agenta CLI. Ten test nie obejmował pełnego odłączenia zasilania ani instalacji od czystego OEM na drugiej jednostce. Wielogodzinna stabilność nadal wymaga obserwacji.

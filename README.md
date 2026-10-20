@@ -1,6 +1,6 @@
 # Android-Headunit-6125-native-bluetooth
 
-**Publiczny instalator Windows przez ADB — bez konta i zgody Admina:** [pobierz wydanie](https://github.com/ganjaq/Android-Headunit-6125-native-bluetooth/releases), [instrukcja PL/EN](docs/PUBLIC_INSTALLER.md). EXE obsługuje lokalną sprawdzoną paczkę; pliki OEM nie są dołączone. Wersja preview, pełna instalacja GUI na czystej jednostce nie jest jeszcze potwierdzona.
+**Kompletny instalator Windows 0.3.0-rc1 — bez konta i zgody Admina:** [pobierz wydanie](https://github.com/ganjaq/Android-Headunit-6125-native-bluetooth/releases/tag/v0.3.0-rc1), [instrukcja PL/EN](docs/PUBLIC_INSTALLER.md). ADB i składniki projektu są dołączone. Wystarczy podłączyć zgodne radio: potrzebne OEM program odczyta i przygotuje lokalnie, bez osobnego folderu payload. Rekonstrukcja daje dokładnie testowane pliki. Pełna nowa instalacja GUI na czystej jednostce pozostaje niepotwierdzona sprzętowo.
 
 **Aktualizacja 19.10.2026: muzyka i tytuły utworów przez AVRCP Target działają w Audi MMI 3G+, także po restarcie Androida.** [Źródła, zgodny zestaw i instrukcja PL/EN](docs/AVRCP.md). Potwierdzono na jednej jednostce; instalację nowego wariantu od czystego OEM sprawdzono dotąd tylko offline.
 

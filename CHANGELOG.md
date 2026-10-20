@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0-rc1 - 2026-10-20
+
+- Completed the public Windows package: bundled project/AOSP components and official ADB 37.0.1; no separately supplied payload folder, Python or Java required.
+- Added automatic local preparation from five hash-pinned OEM inputs, exact-byte APK reconstruction retaining tested signatures, and complete output verification against the reviewed AVRCP kit.
+- Published project-only APK fragments and ZIP/signing metadata recipes, excluding OEM native libraries and all Settings entry payloads. No private signing keys or user data included.
+- Added local kit receipts, automatic rollback kit selection/reconstruction, negative tests and a real-input read/pull-only roundtrip test. Existing modified units remain protected from fresh-install overwrite.
+- Supersedes the incomplete 0.3.0-preview1 frontend. Fresh clean-OEM full GUI installation/rollback on another unit remains unverified; no new runtime build or changed APK/JNI/controller hash is introduced.
+
 ## Unreleased - 2026-10-19
 
 - Added public Windows ADB frontend 0.3.0-preview1 with local checking, installation, rollback and separately confirmed restart. No Customer/Admin approval backend or account required.

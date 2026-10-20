@@ -10,3 +10,5 @@
 *.png binary
 *.gif binary
 *.jpg binary
+# Hash-pinned reconstruction assets must survive checkout byte-for-byte.
+installer/components/** -text

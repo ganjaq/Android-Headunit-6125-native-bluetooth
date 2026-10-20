@@ -33,19 +33,19 @@ class Window:
         ttk.Label(frame, text='Natywny Bluetooth / Native Bluetooth', font=('Segoe UI', 20)).pack(anchor='w')
         ttk.Label(frame, text='Qualcomm 6125 • Android 10 • A2DP / HID / AVRCP', font=('Segoe UI', 11)).pack(anchor='w', pady=(4, 12))
         ttk.Label(frame, text='1. Włącz debugowanie USB i Device/ADB. Podłącz tylko jedno radio.\n'
-                             '2. Wskaż sprawdzoną paczkę. Sprawdź radio, potem zatwierdź instalację.\n'
-                             'Enable USB debugging and Device/ADB; connect one radio, choose a reviewed kit, then check.',
+                             '2. Kliknij Sprawdź radio. Paczka zostanie przygotowana automatycznie.\n'
+                             'Enable USB debugging and Device/ADB; connect one radio and press Check. Kit preparation is automatic.',
                   wraplength=850).pack(anchor='w')
+        self.advanced = tk.BooleanVar(value=False)
         fields = ttk.Frame(frame)
-        fields.pack(fill='x', pady=14)
+        ttk.Checkbutton(frame, text='Opcje zaawansowane / Advanced options', variable=self.advanced,
+                        command=lambda: fields.pack(fill='x', pady=14) if self.advanced.get() else fields.pack_forget()).pack(anchor='w', pady=10)
         fields.columnconfigure(1, weight=1)
-        executable_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else ngd.BASE
-        default_release = executable_dir/'release'
         self.adb = tk.StringVar(value=find_adb())
-        self.release = tk.StringVar(value=str(default_release) if default_release.exists() else '')
+        self.release = tk.StringVar(value='')
         self.profile = tk.StringVar(value='')
         for row, (label, value, folder) in enumerate([
-            ('ADB (adb.exe)', self.adb, False), ('Paczka / Release folder', self.release, True),
+            ('ADB (adb.exe)', self.adb, False), ('Własna paczka / Custom kit (optional)', self.release, True),
             ('Profil bliźniaka / Twin profile (optional)', self.profile, False)]):
             ttk.Label(fields, text=label).grid(row=row, column=0, sticky='w', pady=5)
             ttk.Entry(fields, textvariable=value).grid(row=row, column=1, sticky='ew', padx=10)
@@ -69,7 +69,8 @@ class Window:
         self.text.pack(fill='both', expand=True, pady=10)
         ttk.Label(frame, text='Bez konta i zgody Admina. Backup lokalny; restart wyłącznie po potwierdzeniu.\n'
                              'No account or remote approval. Local backups; restart requires confirmation.\n'
-                             'Pliki OEM nie są dołączone / OEM payload is not included.', wraplength=850).pack(anchor='w')
+                             'Składniki projektu są dołączone; pliki OEM program odczyta z radia.\n'
+                             'Project components included; OEM inputs are read locally from your radio.', wraplength=850).pack(anchor='w')
         self.data = Path(os.environ.get('LOCALAPPDATA', str(Path.home())))/'NEXTGENDRIVE/BluetoothInstaller'
         self.root.after(100, self.poll)
 
@@ -84,7 +85,7 @@ class Window:
 
     def parameters(self):
         if not self.adb.get().strip(): raise RuntimeError('Wskaż oficjalny adb.exe / Select official adb.exe')
-        return (self.adb.get().strip(), self.release.get().strip() or str(ngd.BASE/'release'), self.profile.get().strip() or None, self.use_root.get())
+        return (self.adb.get().strip(), self.release.get().strip() or None, self.profile.get().strip() or None, self.use_root.get())
 
     def new_engine(self):
         adb, release, profile, root = self.parameters()
